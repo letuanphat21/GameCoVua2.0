@@ -1,0 +1,134 @@
+package covua;
+
+import java.util.Arrays;
+
+import covua.chess.Bishop;
+import covua.chess.King;
+import covua.chess.Knight;
+import covua.chess.Pawn;
+import covua.chess.Piece;
+import covua.chess.Queen;
+import covua.chess.Rook;
+
+public class Board {
+	private Piece[][] pieces;
+
+	public Board() {
+		this.pieces = new Piece[8][8];
+		setupPieces();
+	}
+
+	public Board(Piece[][] pieces) {
+		this.pieces = pieces;
+	}
+	
+
+	public Board(Board other) {
+		this.pieces = new Piece[8][8];
+		for (int i = 0; i < 8; i++) {
+			for (int j = 0; j < 8; j++) {
+				this.pieces[i][j] = other.pieces[i][j] == null ? null : other.pieces[i][j].clone();
+			}
+		}
+	}
+
+	public void setupPieces() {
+
+		// Rocks
+		pieces[0][0] = new Rook(PieceColor.BLACK, new Position(0, 0));
+		pieces[0][7] = new Rook(PieceColor.BLACK, new Position(0, 7));
+
+		pieces[7][0] = new Rook(PieceColor.WHITE, new Position(7, 0));
+		pieces[7][7] = new Rook(PieceColor.WHITE, new Position(7, 7));
+
+		// Place Knights
+		pieces[0][1] = new Knight(PieceColor.BLACK, new Position(0, 1));
+		pieces[0][6] = new Knight(PieceColor.BLACK, new Position(0, 6));
+		pieces[7][1] = new Knight(PieceColor.WHITE, new Position(7, 1));
+		pieces[7][6] = new Knight(PieceColor.WHITE, new Position(7, 6));
+
+		// Place Bishops
+		pieces[0][2] = new Bishop(PieceColor.BLACK, new Position(0, 2));
+		pieces[0][5] = new Bishop(PieceColor.BLACK, new Position(0, 5));
+		pieces[7][2] = new Bishop(PieceColor.WHITE, new Position(7, 2));
+		pieces[7][5] = new Bishop(PieceColor.WHITE, new Position(7, 5));
+
+		// Place Queens
+		pieces[0][3] = new Queen(PieceColor.BLACK, new Position(0, 3));
+		pieces[7][3] = new Queen(PieceColor.WHITE, new Position(7, 3));
+
+		// Place Kings
+		pieces[0][4] = new King(PieceColor.BLACK, new Position(0, 4));
+		pieces[7][4] = new King(PieceColor.WHITE, new Position(7, 4));
+
+		// Place Pawns
+		for (int i = 0; i < 8; i++) {
+			pieces[1][i] = new Pawn(PieceColor.BLACK, new Position(1, i));
+			pieces[6][i] = new Pawn(PieceColor.WHITE, new Position(6, i));
+		}
+	}
+
+	public void movePiece(Position start, Position end) {
+
+		if (pieces[start.getRow()][start.getColumn()] != null
+				&& pieces[start.getRow()][start.getColumn()].isValidMove(end, pieces)) {
+
+			pieces[end.getRow()][end.getColumn()] = pieces[start.getRow()][start.getColumn()];
+
+			pieces[end.getRow()][end.getColumn()].setPosition(end);
+
+			pieces[start.getRow()][start.getColumn()] = null;
+		}
+	}
+
+	public Piece[][] getPieces() {
+		return pieces;
+	}
+
+	public Piece getPiece(int row, int column) {
+		return pieces[row][column];
+	}
+
+	public void setPiece(int row, int column, Piece piece) {
+		pieces[row][column] = piece;
+		if (piece != null) {
+			piece.setPosition(new Position(row, column));
+		}
+	}
+
+	public void print(Piece[][] array) {
+		for (int i = 0; i < array.length; i++) {
+			for (int j = 0; j < array.length; j++) {
+				System.out.print(array[i][j]);
+			}
+			System.out.println();
+		}
+	}
+	
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.deepHashCode(pieces);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Board other = (Board) obj;
+		return Arrays.deepEquals(pieces, other.pieces);
+	}
+
+	public static void main(String[] args) {
+		Board pieces = new Board();
+		pieces.print(pieces.getPieces());
+	}
+
+}

@@ -1,0 +1,2 @@
+Game vẫn còn bị một số lỗi nó chưa check được khi mà kiểu con này không chiếu vua nhưng khi con đó đi thì con khác nó chiếu
+Và Vẫn còn ăn vua được nên bị lỗi
