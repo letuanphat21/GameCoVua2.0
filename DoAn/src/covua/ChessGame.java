@@ -107,9 +107,11 @@ public class ChessGame {
 	    lastMoveTarget = end;
 	    /////
 	    
+		String name = movingPiece.getClass().getSimpleName();
 	    String moveNotation = String.format(
-	            "%s: (%d,%d) → (%d,%d)",
+	    		 "%s [%s] (%d,%d) → (%d,%d)",
 	            movingPiece.getColor().toString(),
+	            name,
 	            start.getRow(), start.getColumn(),
 	            end.getRow(), end.getColumn()
 	        );
