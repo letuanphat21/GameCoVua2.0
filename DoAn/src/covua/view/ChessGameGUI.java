@@ -1,5 +1,6 @@
 package covua.view;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -12,11 +13,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.DefaultListModel;
+import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import covua.Board;
 import covua.ChessGame;
@@ -51,15 +55,27 @@ public class ChessGameGUI extends JPanel {
 			put(King.class, "\u265A");
 		}
 	};
-
+	
+	private DefaultListModel<String> historyModel = new DefaultListModel<>();
+	private JList<String> historyView = new JList<>(historyModel);
+	
 	public ChessGameGUI(MainFrame mainFrame,boolean isAi) {
-		this.mainFrame=mainFrame;
-		this.isAi = isAi;
-		setPreferredSize(new Dimension(640, 640));
-		setLayout(new GridLayout(8, 8));
-		initializeBoard();
-		 
-		
+	    this.mainFrame = mainFrame;
+	    this.isAi = isAi;
+
+	    setLayout(new BorderLayout()); 
+
+	    JPanel boardPanel = new JPanel(new GridLayout(8, 8));
+	    boardPanel.setPreferredSize(new Dimension(640, 640));
+
+	    JScrollPane lichSuPane = new JScrollPane(historyView);
+	    lichSuPane.setPreferredSize(new Dimension(200, 640));
+
+	    add(boardPanel, BorderLayout.CENTER); 
+	    add(lichSuPane, BorderLayout.EAST);   
+
+	    initializeBoard(boardPanel);
+	
 	}
 //	public ChessGameGUI(MainFrame mainFrame,boolean isAi,ChessClient client) {
 //		this.mainFrame=mainFrame;
@@ -80,28 +96,26 @@ public class ChessGameGUI extends JPanel {
 	    refreshBoard();
 	}
 
-	private void initializeBoard() {
-		for (int row = 0; row < squares.length; row++) {
-			for (int col = 0; col < squares.length; col++) {
-				final int finalRow = row;
-				final int finalCol = col;
+	private void initializeBoard(JPanel boardPanel) {
+	    for (int row = 0; row < squares.length; row++) {
+	        for (int col = 0; col < squares.length; col++) {
+	            final int finalRow = row;
+	            final int finalCol = col;
 
-				ChessSquareComponent square = new ChessSquareComponent(row, col);
+	            ChessSquareComponent square = new ChessSquareComponent(row, col);
 
-				square.addMouseListener(new MouseAdapter() {
+	            square.addMouseListener(new MouseAdapter() {
+	                @Override
+	                public void mouseClicked(MouseEvent e) {
+	                    handleSquareClick(finalRow, finalCol);
+	                }
+	            });
 
-					@Override
-					public void mouseClicked(MouseEvent e) {
-						handleSquareClick(finalRow, finalCol);
-
-					}
-				});
-				this.add(square);
-				squares[row][col] = square;
-
-			}
-		}
-		refreshBoard();
+	            boardPanel.add(square);
+	            squares[row][col] = square;
+	        }
+	    }
+	    refreshBoard();
 	}
 
 	private void refreshBoard() {
@@ -118,7 +132,10 @@ public class ChessGameGUI extends JPanel {
 				}
 			}
 		}
-
+		historyModel.clear();
+		for (String move : game.getHistoryMoves()) {
+			historyModel.addElement(move);
+		}
 	}
 
 	private void handleSquareClick(int row, int col) {
