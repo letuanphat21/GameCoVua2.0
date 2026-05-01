@@ -15,6 +15,8 @@ public class ChessGame {
 	private Position selectedPosition;
 	private Position lastMoveSource;
 	private Position lastMoveTarget;
+	private List<String> historyMoves = new ArrayList<>();
+
 	
 	public ChessGame() {
 		this.board = new Board();
@@ -105,10 +107,18 @@ public class ChessGame {
 	    lastMoveTarget = end;
 	    /////
 	    
+	    String moveNotation = String.format(
+	            "%s: (%d,%d) → (%d,%d)",
+	            movingPiece.getColor().toString(),
+	            start.getRow(), start.getColumn(),
+	            end.getRow(), end.getColumn()
+	        );
+	    historyMoves.add(moveNotation);
+	    
 		board.movePiece(start, end);
 		whiteTurn = !whiteTurn;
 		return true;
-
+		
 	}
 
 	public void makeMoveForAI(Position start, Position end) {
@@ -404,6 +414,13 @@ public class ChessGame {
 		return Objects.equals(board, other.board) && Objects.equals(selectedPosition, other.selectedPosition)
 				&& whiteTurn == other.whiteTurn;
 	}
+
+	public List<String> getHistoryMoves() {
+		return historyMoves;
+	}
 	
+	public void resetHistory() {
+		historyMoves.clear();
+	}
 
 }
