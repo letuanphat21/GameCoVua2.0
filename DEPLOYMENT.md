@@ -27,7 +27,7 @@ Không bao gồm
 - Chi tiết thiết kế kiến trúc
 - Kỹ thuật tối ưu hiệu năng
 
-###1.3 Cấu trúc tài liệu
+### 1.3 Cấu trúc tài liệu
 - Giới thiệu (phần này)
 - Tổng quan phần mềm
 - Yêu cầu hệ thống
