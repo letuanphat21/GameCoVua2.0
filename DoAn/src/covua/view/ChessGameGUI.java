@@ -139,7 +139,6 @@ public class ChessGameGUI extends JPanel {
 	}
 
 	private void handleSquareClick(int row, int col) {
-
 		boolean moveResult = game.handleSquareSelection(row, col);
 		clearHighlights();
 		if (moveResult) {
