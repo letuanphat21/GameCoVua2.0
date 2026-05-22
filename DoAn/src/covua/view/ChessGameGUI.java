@@ -58,7 +58,8 @@ public class ChessGameGUI extends JPanel {
 	
 	private DefaultListModel<String> historyModel = new DefaultListModel<>();
 	private JList<String> historyView = new JList<>(historyModel);
-	
+	//9.1.9. Giao diện vùng lịch sử nước đi (JList historyView) 
+	//hiển thị lại toàn bộ chuỗi các nước đi đang có trong historyMoves của ChessGame.
 	public ChessGameGUI(MainFrame mainFrame,boolean isAi) {
 	    this.mainFrame = mainFrame;
 	    this.isAi = isAi;
@@ -67,7 +68,9 @@ public class ChessGameGUI extends JPanel {
 
 	    JPanel boardPanel = new JPanel(new GridLayout(8, 8));
 	    boardPanel.setPreferredSize(new Dimension(640, 640));
-
+		
+		//9.1.10. User trực quan thấy toàn bộ lịch sử nước đi cập nhật theo thứ tự 
+		//(từng dòng, mỗi dòng biểu diễn 1 nước) ở vùng lịch sử bên phải giao diện.
 	    JScrollPane lichSuPane = new JScrollPane(historyView);
 	    lichSuPane.setPreferredSize(new Dimension(200, 640));
 
@@ -118,8 +121,12 @@ public class ChessGameGUI extends JPanel {
 	    refreshBoard();
 	}
 
+	//9.1.6. Kết quả thực thi nước đi trả về thành công, 
+	//ChessGameGUI gọi hàm refreshBoard() để bắt đầu cập nhật giao diện.
 	private void refreshBoard() {
 		Board board = game.getBoard();
+		//9.1.7. Hệ thống vẽ lại tất cả các quân cờ ở đúng trạng thái mới trên vùng giao diện bàn cờ.
+
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
 				Piece piece = board.getPiece(row, col);
@@ -133,11 +140,15 @@ public class ChessGameGUI extends JPanel {
 			}
 		}
 		historyModel.clear();
+		//9.1.8. Hệ thống thông qua game.getHistoryMoves() để lấy lên toàn bộ lịch sử nước đi hiện tại, 
+		//xóa dữ liệu cũ và cập nhật dữ liệu mới vào historyModel.
+
 		for (String move : game.getHistoryMoves()) {
 			historyModel.addElement(move);
 		}
 	}
-
+	
+	//9.1.3. ChessGameGUI gọi tiếp game.handleSquareSelection(row, col) để xác thực và thực thi nước đi.
 	private void handleSquareClick(int row, int col) {
 		boolean moveResult = game.handleSquareSelection(row, col);
 		clearHighlights();
@@ -160,6 +171,9 @@ public class ChessGameGUI extends JPanel {
 //	            client.sendMove(moveText);
 //	        }
 			checkGameOverAfterMove();
+			//9.1.4. Hệ thống kiểm tra tính hợp lệ của nước đi, 
+			//nếu nước đi hợp lệ thì hệ thống gọi hàm makeMove(Position, Position) 
+			//nội bộ để thực thi và tiếp tục bước tiếp theo.
 			if(isAi ) {
 				if (game.getCurrentPlayerColor() == PieceColor.BLACK) {
 					makeAIMove();
