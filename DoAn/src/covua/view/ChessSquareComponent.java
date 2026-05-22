@@ -18,6 +18,7 @@ public class ChessSquareComponent extends JButton {
 	}
 
 	private void initButton() {
+		setFocusable(false);
 		// thiết lập size button
 		setPreferredSize(new Dimension(90, 90));
 
