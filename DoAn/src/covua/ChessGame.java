@@ -83,7 +83,9 @@ public class ChessGame {
 	
 	
 	
-
+	//9.1.4. Hệ thống kiểm tra tính hợp lệ của nước đi, 
+	//nếu nước đi hợp lệ thì hệ thống gọi hàm makeMove(Position, Position) 
+	//nội bộ để thực thi và tiếp tục bước tiếp theo.
 	// method chọn quân đi í
 	public boolean makeMove(Position start, Position end) {
 		Piece movingPiece = board.getPiece(start.getRow(), start.getColumn());
@@ -106,7 +108,8 @@ public class ChessGame {
 		lastMoveSource = start;
 	    lastMoveTarget = end;
 	    /////
-	    
+	    //9.1.5. ChessGame tạo một chuỗi mô tả nước đi (bao gồm màu quân, loại quân và tọa độ từ đâu đến đâu) 
+	    /// rồi gọi historyMoves.add(moveNotation) để lưu lại trong danh sách lịch sử.
 		String name = movingPiece.getClass().getSimpleName();
 	    String moveNotation = String.format(
 	    		 "%s [%s] (%d,%d) → (%d,%d)",
