@@ -38,6 +38,8 @@ public class MainFrame extends JFrame{
         setVisible(true);
 
 	}
+		//9.1.0. User chọn chế độ chơi để bắt đầu trò chơi.
+
 	public void goTo(String screenName) {
 		backStack.push(currentScreen);
 	    currentScreen = screenName;
