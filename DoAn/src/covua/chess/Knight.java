@@ -25,16 +25,8 @@ public class Knight extends Piece {
 			return false;
 		}
 		
-		Piece destinationPiece =board[newPosition.getRow()][newPosition.getColumn()];
-//		if(destinationPiece instanceof King) {
-//			return false;
-//		}
-		if(destinationPiece==null) {
-			return true;
-		}else if(destinationPiece.getColor()!=this.color) {
-			return true;
-		}
-		return false;
+		Piece destinationPiece = board[newPosition.getRow()][newPosition.getColumn()];
+		return destinationPiece == null || canCapture(destinationPiece);
 		
 	}
 

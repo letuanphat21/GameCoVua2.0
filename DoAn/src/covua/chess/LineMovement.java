@@ -39,7 +39,7 @@ public final class LineMovement {
 		if (destination == null) {
 			return true;
 		}
-		return destination.getColor() != moverColor;
+		return destination.getColor() != moverColor && !(destination instanceof King);
 	}
 
 	/**
