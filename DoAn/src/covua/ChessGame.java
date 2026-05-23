@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import covua.chess.King;
+import covua.chess.Pawn;
 import covua.chess.Piece;
 
 public class ChessGame {
@@ -128,16 +129,32 @@ public class ChessGame {
 
 	public void makeMoveForAI(Position start, Position end) {
 		Piece movingPiece = board.getPiece(start.getRow(), start.getColumn());
-		if (movingPiece.isValidMove(end, board.getPieces())) {
-			board.movePiece(start, end);
-
-			whiteTurn = !whiteTurn;
+		if (movingPiece == null || !movingPiece.isValidMove(end, board.getPieces())) {
+			return;
 		}
+
+		ChessGame copy = new ChessGame(this);
+		copy.getBoard().movePiece(start, end);
+
+		if (copy.isInCheck(movingPiece.getColor())) {
+			return;
+		}
+
+		board.movePiece(start, end);
+		whiteTurn = !whiteTurn;
 	}
 
 	// Method coi thử quân nào chiếu vua của hay không
 	public boolean isInCheck(PieceColor kingColor) {
 		Position kingPosition = findKingPosition(kingColor);
+		Piece originalKing = board.getPiece(kingPosition.getRow(), kingPosition.getColumn());
+		
+		// Temporarily replace King with a dummy Pawn of same color
+		// so that isValidMove threat detection evaluates correctly.
+		Pawn dummy = new Pawn(kingColor, kingPosition);
+		board.setPiece(kingPosition.getRow(), kingPosition.getColumn(), dummy);
+		
+		boolean inCheck = false;
 		int n = board.getPieces().length;
 		for (int row = 0; row < n; row++) {
 			for (int col = 0; col < n; col++) {
@@ -145,12 +162,17 @@ public class ChessGame {
 
 				if (piece != null && piece.getColor() != kingColor) {
 					if (piece.isValidMove(kingPosition, board.getPieces())) {
-						return true;
+						inCheck = true;
+						break;
 					}
 				}
 			}
 		}
-		return false;
+		
+		// Restore original King
+		board.setPiece(kingPosition.getRow(), kingPosition.getColumn(), originalKing);
+		
+		return inCheck;
 	}
 
 	// Lấy vị trì của vua

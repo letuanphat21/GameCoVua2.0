@@ -41,6 +41,10 @@ public abstract class Piece implements Cloneable {
 
 	public abstract boolean isValidMove(Position newPosition, Piece[][] board);
 
+	public boolean canCapture(Piece target) {
+		return target != null && target.getColor() != this.color && !(target instanceof King);
+	}
+
 	public boolean isSameMove(Position newPosition) {
 		return this.getPosition().equals(newPosition);
 	}

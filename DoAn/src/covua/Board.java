@@ -69,14 +69,14 @@ public class Board {
 	}
 
 	public void movePiece(Position start, Position end) {
-
-		if (pieces[start.getRow()][start.getColumn()] != null
-				&& pieces[start.getRow()][start.getColumn()].isValidMove(end, pieces)) {
-
-			pieces[end.getRow()][end.getColumn()] = pieces[start.getRow()][start.getColumn()];
-
+		Piece movingPiece = pieces[start.getRow()][start.getColumn()];
+		if (movingPiece != null && movingPiece.isValidMove(end, pieces)) {
+			Piece target = pieces[end.getRow()][end.getColumn()];
+			if (target instanceof King) {
+				return;
+			}
+			pieces[end.getRow()][end.getColumn()] = movingPiece;
 			pieces[end.getRow()][end.getColumn()].setPosition(end);
-
 			pieces[start.getRow()][start.getColumn()] = null;
 		}
 	}
