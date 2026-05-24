@@ -24,16 +24,7 @@ public class King extends Piece {
 			return false;
 
 		Piece destinationPiece = board[newPosition.getRow()][newPosition.getColumn()];
-		
-		
-//		if(destinationPiece == null) {
-//			return true;
-//		}
-//		if(destinationPiece.getColor() != this.getColor()) {
-//			
-//		}
-		
-		return destinationPiece == null || destinationPiece.getColor() != this.getColor();
+		return destinationPiece == null || canCapture(destinationPiece);
 	}
 
 }
