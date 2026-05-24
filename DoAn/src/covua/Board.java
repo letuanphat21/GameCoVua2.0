@@ -75,8 +75,13 @@ public class Board {
 			if (target instanceof King) {
 				return;
 			}
+			// 6.1.21: Lớp Board cập nhật mảng pieces: Ô đích nhận giá trị quân Xe, vị trí cũ được gán null.
+			// 6.6.3: Hệ thống tiếp tục các bước từ 6.1.18. Tại bước 6.1.21, quân Xe ghi đè lên quân địch, 
+			// quân địch bị loại khỏi danh sách các quân trên bàn cờ.
 			pieces[end.getRow()][end.getColumn()] = movingPiece;
+			// 6.1.22: Hệ thống gọi setPosition(end) của quân Xe để cập nhật tọa độ mới.
 			pieces[end.getRow()][end.getColumn()].setPosition(end);
+			// 6.1.21: Lớp Board cập nhật mảng pieces: Ô đích nhận giá trị quân Xe, vị trí cũ được gán null.
 			pieces[start.getRow()][start.getColumn()] = null;
 		}
 	}

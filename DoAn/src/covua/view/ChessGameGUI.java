@@ -150,7 +150,11 @@ public class ChessGameGUI extends JPanel {
 	
 	//9.1.3. ChessGameGUI gọi tiếp game.handleSquareSelection(row, col) để xác thực và thực thi nước đi.
 	private void handleSquareClick(int row, int col) {
+		// 6.1.1: Hệ thống gọi phương thức handleSquareClick(int row, int col) trong lớp ChessGameGUI.
+		// 6.1.2: ChessGameGUI chuyển tiếp yêu cầu đến phương thức handleSquareSelection(row, col) trong lớp ChessGame.
 		boolean moveResult = game.handleSquareSelection(row, col);
+		// 6.3.4: Hệ thống đặt lại selectedPosition = null, gọi clearHighlights() và chờ người dùng chọn lại từ đầu.
+		// 6.5.4: Hệ thống đặt selectedPosition = null và gọi clearHighlights().
 		clearHighlights();
 		if (moveResult) {
 			// LẤY TỌA ĐỘ ĐÃ CHỌN
@@ -158,8 +162,9 @@ public class ChessGameGUI extends JPanel {
 //	        Position newPos = game.getLastMoveTarget();
 	        //  KHÔNG ĐỤNG VÀO LOGIC CỦ
 	        
-	        
+	        // 6.1.25: (Giao diện) ChessGameGUI gọi refreshBoard() để vẽ lại bàn cờ
 			refreshBoard();
+			// 6.1.26: Hệ thống gọi checkGameState(), nếu đối phương bị chiếu, hệ thống tô đỏ ô chứa Vua đối phương.
 			checkGameState();
 			if (listState.size() == 6) {
 				checkGameDraw();
@@ -170,10 +175,15 @@ public class ChessGameGUI extends JPanel {
 //	        if (client != null) {
 //	            client.sendMove(moveText);
 //	        }
+			// 6.9.1: Hệ thống gọi checkGameOverAfterMove().
+			// (Bên trong hàm này sẽ thực hiện 6.9.2 và 6.9.3: Nếu phát hiện trạng thái isCheckmate 
+			// hoặc checkGameDraw (hòa), hệ thống hiển thị thông báo kết thúc trận đấu qua JOptionPane. 
+			// Nếu người dùng chọn "Yes", hệ thống gọi resetGame() để khởi tạo lại bàn cờ mới).
 			checkGameOverAfterMove();
 			//9.1.4. Hệ thống kiểm tra tính hợp lệ của nước đi, 
 			//nếu nước đi hợp lệ thì hệ thống gọi hàm makeMove(Position, Position) 
 			//nội bộ để thực thi và tiếp tục bước tiếp theo.
+			// 6.1.27: Hệ thống kiểm tra isAi, nếu là lượt của máy, hệ thống kích hoạt makeAIMove().
 			if(isAi ) {
 				if (game.getCurrentPlayerColor() == PieceColor.BLACK) {
 					makeAIMove();
@@ -186,8 +196,10 @@ public class ChessGameGUI extends JPanel {
 			// thằng này sẽ hiện lên những nước đi hợp lệ
 			// của vị trị mà ta kích vào nếu chỗ đó có quân
 			// của ta
+			// 6.1.7: (Giao diện) ChessGameGUI gọi highlightLegalMoves() để tô màu xanh các ô đích hợp lệ cho quân Xe đã chọn.
 			highlightLegalMoves(new Position(row, col));
 		}
+		// 6.1.25: (Giao diện) ChessGameGUI gọi refreshBoard() để vẽ lại bàn cờ
 		refreshBoard();
 	}
 
