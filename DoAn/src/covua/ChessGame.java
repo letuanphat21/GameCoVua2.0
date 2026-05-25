@@ -95,14 +95,22 @@ public class ChessGame {
 			return false;
 		}
 
+		// 6.1.11: ChessGame gọi movingPiece.isValidMove(end, board.getPieces()) của đối tượng Xe.
+		// Bao gồm các check 6.1.12 -> 6.1.17
 		if (!movingPiece.isValidMove(end, board.getPieces())) {
+			// 6.3.3: Phương thức makeMove nhận kết quả false và trả về false.
 			return false;
 
 		}
+		// 6.1.18: ChessGame khởi tạo đối tượng copy (giả lập) và di chuyển thử để gọi copy.isInCheck().
 		ChessGame copy = new ChessGame(this);
 		copy.getBoard().movePiece(start, end);
 
+		// 6.1.19: Hệ thống gọi copy.isInCheck và xác nhận nước đi này không làm Vua bị chiếu.
+		// 6.5.1: Hệ thống chạy mô phỏng trên đối tượng copy, phương thức isInCheck trả về true.
 		if (copy.isInCheck(movingPiece.getColor())) {
+			// 6.5.2: Hệ thống xác định nước đi này vi phạm luật vì để mặc hoặc làm Vua rơi vào thế bị chiếu.
+			// 6.5.3: makeMove trả về false và không cập nhật dữ liệu trên bàn cờ thực (board).
 			return false;
 		}
 		//Dánh cho online
@@ -120,9 +128,12 @@ public class ChessGame {
 	            end.getRow(), end.getColumn()
 	        );
 	    historyMoves.add(moveNotation);
-	    
+		// 6.1.20: Hệ thống gọi board.movePiece(start, end).
 		board.movePiece(start, end);
+		// 6.1.23: ChessGame thực hiện đổi lượt chơi: whiteTurn = !whiteTurn.
 		whiteTurn = !whiteTurn;
+		// 6.1.17: Phương thức isValidMove trả về true.
+		// 6.6.2: isValidMove trả về true.
 		return true;
 		
 	}
@@ -263,20 +274,50 @@ public class ChessGame {
 	}
 
 	public boolean handleSquareSelection(int row, int col) {
+		Position newPos = new Position(row, col);
+		
+		// 6.1.3: Hệ thống kiểm tra selectedPosition == null, xác nhận người dùng đang chọn quân Xe lần đầu.
 		if (selectedPosition == null) {
+			// 6.1.4: Hệ thống gọi board.getPiece(row, col) để lấy thông tin quân Xe tại vị trí vừa chọn.
 			Piece selectedPiece = board.getPiece(row, col);
 
-			if (selectedPiece != null
-					&& selectedPiece.getColor() == (whiteTurn ? PieceColor.WHITE : PieceColor.BLACK)) {
-				selectedPosition = new Position(row, col);
+			// 6.1.5: Hệ thống xác nhận quân Xe tồn tại và đúng màu của lượt hiện tại (whiteTurn).
+			// 6.2.1: Hệ thống phát hiện quân cờ tại ô chọn là null hoặc không đúng màu của lượt hiện tại (whiteTurn).
+			if (selectedPiece != null && selectedPiece.getColor() == (whiteTurn ? PieceColor.WHITE : PieceColor.BLACK)) {
+				
+				// 6.1.6: Hệ thống gán vị trí vừa chọn vào biến selectedPosition.
+				selectedPosition = newPos;
+				return false; 
+			}
+			
+			// 6.2.2: Phương thức handleSquareSelection trả về false.
+			// 6.2.3: (Giao diện) ChessGameGUI không thực hiện highlight, người dùng phải chọn lại quân cờ đúng.
+			return false;
+		} 
+		
+		// 6.1.9: Hệ thống gọi lại phương thức handleSquareSelection(row, col), lúc này selectedPosition != null.
+		else {
+			
+			// 6.8.1: Hệ thống xác nhận destinationPiece.getColor() == getCurrentPlayerColor()
+			Piece destinationPiece = board.getPiece(row, col);
+			if(destinationPiece != null && destinationPiece.getColor() == getCurrentPlayerColor()) {
+				// 6.8.2: Hệ thống hủy lệnh di chuyển cũ (makeMove trả về false).
+				// 6.8.3: (Logic xử lý chọn lại) Hệ thống gán selectedPosition = newPosition và cập nhật lại vùng 
+				//highlight cho quân cờ mới vừa chọn tại ô đích.
+				selectedPosition = newPos;
 				return false;
 			}
-		} else {
-			boolean moveMade = makeMove(selectedPosition, new Position(row, col));
+			
+			// 6.1.10: Hệ thống gọi phương thức makeMove(selectedPosition, newPosition) trong ChessGame.
+			boolean success = makeMove(selectedPosition, newPos);
+			
+			// 6.3.3: Phương thức makeMove nhận kết quả false và trả về false.
+			// 6.3.4: Hệ thống đặt lại selectedPosition = null, gọi clearHighlights() và chờ người dùng chọn lại từ đầu.
+			// 6.5.3: makeMove trả về false và không cập nhật dữ liệu trên bàn cờ thực (board).
+			// 6.5.4: Hệ thống đặt selectedPosition = null và gọi clearHighlights().
 			selectedPosition = null;
-			return moveMade;
+			return success;
 		}
-		return false;
 	}
 
 	public List<Position> getLegalMovesForPieceAt(Position position) {
