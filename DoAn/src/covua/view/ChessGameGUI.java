@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JMenu;
@@ -20,12 +21,14 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 
 import covua.Board;
 import covua.ChessGame;
 import covua.PieceColor;
 import covua.Position;
+import covua.ai.Alphabeta;
 import covua.ai.Minimax;
 import covua.ai.Node;
 import covua.chess.Bishop;
@@ -42,6 +45,7 @@ public class ChessGameGUI extends JPanel {
 	private final ChessGame game = new ChessGame();
 	private List<ChessGame> listState = new ArrayList<ChessGame>();
 	private boolean isAi;
+	private boolean useAlphabeta = true;
 	private MainFrame mainFrame;
 //	private ChessClient client;
 	private Position selectedPos = null;
@@ -205,7 +209,15 @@ public class ChessGameGUI extends JPanel {
 
 	private void makeAIMove() {
 		Node root = new Node(new ChessGame(this.game));
-		Node best = Minimax.bestMove(root, 3);
+		Node best = null;
+
+		// Kiểm tra người dùng đang chọn loại AI nào
+		if (useAlphabeta) {
+			best = Alphabeta.bestMove(root, 3); // Chạy Alphabeta
+		} else {
+			best = Minimax.bestMove(root, 3);   // Chạy Minimax
+		}
+		
 		if (best != null) {
 			this.game.copyFrom(best.getState());
 			listState.add(new ChessGame(this.game));
@@ -274,8 +286,29 @@ public class ChessGameGUI extends JPanel {
 	public JMenuBar createMenuBar() {
 	    JMenuBar menuBar = new JMenuBar();
 	    JMenu gameMenu = new JMenu("Game");
+	    JMenu aiMenu = new JMenu("Chọn AI");
 	    JMenuItem resetItem = new JMenuItem("Reset");
 	    JMenuItem backHome = new JMenuItem("home");
+	    JRadioButtonMenuItem alphabetaItem = new JRadioButtonMenuItem("Thuật toán Alpha-Beta", true);
+	    JRadioButtonMenuItem minimaxItem = new JRadioButtonMenuItem("Thuật toán Minimax", false);
+ 		
+ 		ButtonGroup aiGroup = new ButtonGroup();
+ 		aiGroup.add(alphabetaItem);
+ 		aiGroup.add(minimaxItem);
+
+ 		alphabetaItem.addActionListener(e -> {
+ 			useAlphabeta = true;
+ 			JOptionPane.showMessageDialog(this, "Đã chuyển sang AI: Alpha-Beta");
+ 		});
+
+ 		minimaxItem.addActionListener(e -> {
+ 			useAlphabeta = false;
+ 			JOptionPane.showMessageDialog(this, "Đã chuyển sang AI: Minimax");
+ 		});
+
+ 		aiMenu.add(alphabetaItem);
+ 		aiMenu.add(minimaxItem);
+ 		
 	    resetItem.addActionListener(e -> resetGame());
 	    backHome.addActionListener(new ActionListener() {
 			
@@ -288,6 +321,8 @@ public class ChessGameGUI extends JPanel {
 		});
 	    gameMenu.add(backHome);
 	    gameMenu.add(resetItem);
+	    gameMenu.addSeparator();
+		gameMenu.add(aiMenu);
 	    menuBar.add(gameMenu);
 	    return menuBar;
 	}
