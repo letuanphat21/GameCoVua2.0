@@ -27,4 +27,9 @@ public class King extends Piece {
 		return destinationPiece == null || canCapture(destinationPiece);
 	}
 
+	@Override
+	public King clone() {
+		return (King) super.clone();
+	}
+
 }

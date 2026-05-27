@@ -35,7 +35,10 @@ public class Rook extends Piece {
 
 	}
 
-
+	@Override
+	public Rook clone() {
+		return (Rook) super.clone();
+	}
 
 }
 
