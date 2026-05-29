@@ -24,6 +24,7 @@ public class Minimax {
 			for (Node nodeChild : listCon) {
 				mn = Math.min(mn, minimax(nodeChild, depth - 1, true));
 			}
+			// 8.2.7: Hệ thống trả về diểm số heuristic
 			return mn;
 		}
 
