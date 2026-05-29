@@ -328,7 +328,9 @@ public class ChessGame {
 	}
 
 	public void resetGame() {
+		// 8.5.17b / 8.8.17: Hệ thống gọi phương thức resetGame() để khởi tạo lại dữ liệu bàn cờ mặc định ban đầu.
 		this.board = new Board();
+		historyMoves.clear();
 		this.whiteTurn = true;
 	}
 
@@ -550,6 +552,8 @@ public class ChessGame {
 
 	@Override
 	public boolean equals(Object obj) {
+		// 8.4.13: Phương thức checkGameDraw() tiến hành đối chiếu tính trùng lặp của các trạng thái bàn cờ 
+		//(listState.get(1), get(3), get(5))
 		if (this == obj)
 			return true;
 		if (obj == null)
