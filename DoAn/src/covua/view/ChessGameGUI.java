@@ -2,7 +2,9 @@ package covua.view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,7 +16,9 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -23,6 +27,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
 
 import covua.Board;
 import covua.ChessGame;
@@ -62,6 +68,13 @@ public class ChessGameGUI extends JPanel {
 	
 	private DefaultListModel<String> historyModel = new DefaultListModel<>();
 	private JList<String> historyView = new JList<>(historyModel);
+	private JLabel turnLabel = new JLabel("", SwingConstants.CENTER);
+	private static final Color WHITE_MOVE_BACKGROUND = new Color(245, 248, 255);
+	private static final Color BLACK_MOVE_BACKGROUND = new Color(48, 52, 63);
+	private static final Color WHITE_MOVE_FOREGROUND = new Color(30, 44, 70);
+	private static final Color BLACK_MOVE_FOREGROUND = new Color(245, 247, 250);
+	private static final Color TURN_WHITE_BACKGROUND = new Color(255, 255, 255);
+	private static final Color TURN_BLACK_BACKGROUND = new Color(35, 39, 48);
 	//9.1.9. Giao diện vùng lịch sử nước đi (JList historyView) 
 	//hiển thị lại toàn bộ chuỗi các nước đi đang có trong historyMoves của ChessGame.
 	public ChessGameGUI(MainFrame mainFrame,boolean isAi) {
@@ -72,17 +85,57 @@ public class ChessGameGUI extends JPanel {
 
 	    JPanel boardPanel = new JPanel(new GridLayout(8, 8));
 	    boardPanel.setPreferredSize(new Dimension(640, 640));
+	    configureHistoryView();
 		
 		//9.1.10. User trực quan thấy toàn bộ lịch sử nước đi cập nhật theo thứ tự 
 		//(từng dòng, mỗi dòng biểu diễn 1 nước) ở vùng lịch sử bên phải giao diện.
+	    JPanel historyPanel = new JPanel(new BorderLayout());
+	    JPanel historyHeader = new JPanel(new BorderLayout());
+	    JLabel historyTitle = new JLabel("Move History", SwingConstants.CENTER);
+	    historyTitle.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 15));
+	    historyTitle.setBorder(new EmptyBorder(8, 0, 8, 0));
+	    turnLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
+	    turnLabel.setOpaque(true);
+	    turnLabel.setBorder(new EmptyBorder(7, 0, 7, 0));
+	    turnLabel.setVisible(!isAi);
+	    historyHeader.add(turnLabel, BorderLayout.NORTH);
+	    historyHeader.add(historyTitle, BorderLayout.CENTER);
 	    JScrollPane lichSuPane = new JScrollPane(historyView);
-	    lichSuPane.setPreferredSize(new Dimension(200, 640));
+	    historyPanel.add(historyHeader, BorderLayout.NORTH);
+	    historyPanel.add(lichSuPane, BorderLayout.CENTER);
+	    historyPanel.setPreferredSize(new Dimension(200, 640));
 
 	    add(boardPanel, BorderLayout.CENTER); 
-	    add(lichSuPane, BorderLayout.EAST);   
+	    add(historyPanel, BorderLayout.EAST);   
 
 	    initializeBoard(boardPanel);
 	
+	}
+
+	private void configureHistoryView() {
+		historyView.setFixedCellHeight(30);
+		historyView.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
+		historyView.setSelectionBackground(new Color(70, 130, 180));
+		historyView.setSelectionForeground(Color.WHITE);
+		historyView.setCellRenderer(new DefaultListCellRenderer() {
+			@Override
+			public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+					boolean isSelected, boolean cellHasFocus) {
+				JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+				label.setOpaque(true);
+				label.setHorizontalAlignment(SwingConstants.LEFT);
+				label.setFont(list.getFont());
+
+				if (!isSelected) {
+					boolean isWhiteMove = index % 2 == 0;
+					label.setBackground(isWhiteMove ? WHITE_MOVE_BACKGROUND : BLACK_MOVE_BACKGROUND);
+					label.setForeground(isWhiteMove ? WHITE_MOVE_FOREGROUND : BLACK_MOVE_FOREGROUND);
+				}
+
+				label.setText("  " + value);
+				return label;
+			}
+		});
 	}
 //	public ChessGameGUI(MainFrame mainFrame,boolean isAi,ChessClient client) {
 //		this.mainFrame=mainFrame;
@@ -148,8 +201,27 @@ public class ChessGameGUI extends JPanel {
 		//xóa dữ liệu cũ và cập nhật dữ liệu mới vào historyModel.
 
 		// 8.1.12: Hệ thống cập nhật lịch sử nước đi (historyView) ở vùng giao diện bên phải
+		int moveNumber = 1;
 		for (String move : game.getHistoryMoves()) {
-			historyModel.addElement(move);
+			historyModel.addElement(moveNumber + ". " + move);
+			moveNumber++;
+		}
+		updateTurnLabel();
+	}
+
+	private void updateTurnLabel() {
+		if (isAi) {
+			return;
+		}
+
+		if (game.getCurrentPlayerColor() == PieceColor.WHITE) {
+			turnLabel.setText("Turn: White");
+			turnLabel.setBackground(TURN_WHITE_BACKGROUND);
+			turnLabel.setForeground(Color.BLACK);
+		} else {
+			turnLabel.setText("Turn: Black");
+			turnLabel.setBackground(TURN_BLACK_BACKGROUND);
+			turnLabel.setForeground(Color.WHITE);
 		}
 	}
 	
