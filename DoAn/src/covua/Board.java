@@ -75,12 +75,36 @@ public class Board {
 			if (target instanceof King) {
 				return;
 			}
+			
+			if (movingPiece instanceof King && Math.abs(start.getColumn() - end.getColumn()) == 2) {
+				// Castling!
+				pieces[end.getRow()][end.getColumn()] = movingPiece;
+				pieces[end.getRow()][end.getColumn()].setPosition(end);
+				pieces[end.getRow()][end.getColumn()].setHasMoved(true);
+				pieces[start.getRow()][start.getColumn()] = null;
+				
+				int row = start.getRow();
+				int direction = (end.getColumn() - start.getColumn()) > 0 ? 1 : -1;
+				int rookStartCol = direction > 0 ? 7 : 0;
+				int rookEndCol = direction > 0 ? 5 : 3;
+				
+				Piece rook = pieces[row][rookStartCol];
+				if (rook != null) {
+					pieces[row][rookEndCol] = rook;
+					pieces[row][rookEndCol].setPosition(new Position(row, rookEndCol));
+					pieces[row][rookEndCol].setHasMoved(true);
+					pieces[row][rookStartCol] = null;
+				}
+				return;
+			}
+			
 			// 6.1.21: Lớp Board cập nhật mảng pieces: Ô đích nhận giá trị quân Xe, vị trí cũ được gán null.
 			// 6.6.3: Hệ thống tiếp tục các bước từ 6.1.18. Tại bước 6.1.21, quân Xe ghi đè lên quân địch, 
 			// quân địch bị loại khỏi danh sách các quân trên bàn cờ.
 			pieces[end.getRow()][end.getColumn()] = movingPiece;
 			// 6.1.22: Hệ thống gọi setPosition(end) của quân Xe để cập nhật tọa độ mới.
 			pieces[end.getRow()][end.getColumn()].setPosition(end);
+			pieces[end.getRow()][end.getColumn()].setHasMoved(true);
 			// 6.1.21: Lớp Board cập nhật mảng pieces: Ô đích nhận giá trị quân Xe, vị trí cũ được gán null.
 			pieces[start.getRow()][start.getColumn()] = null;
 		}

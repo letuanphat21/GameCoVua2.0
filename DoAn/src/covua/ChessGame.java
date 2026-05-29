@@ -95,47 +95,53 @@ public class ChessGame {
 			return false;
 		}
 
-		// 6.1.11: ChessGame gọi movingPiece.isValidMove(end, board.getPieces()) của đối tượng Xe.
-		// Bao gồm các check 6.1.12 -> 6.1.17
 		if (!movingPiece.isValidMove(end, board.getPieces())) {
-			// 6.3.3: Phương thức makeMove nhận kết quả false và trả về false.
-			return false;
-
-		}
-		// 6.1.18: ChessGame khởi tạo đối tượng copy (giả lập) và di chuyển thử để gọi copy.isInCheck().
-		ChessGame copy = new ChessGame(this);
-		copy.getBoard().movePiece(start, end);
-
-		// 6.1.19: Hệ thống gọi copy.isInCheck và xác nhận nước đi này không làm Vua bị chiếu.
-		// 6.5.1: Hệ thống chạy mô phỏng trên đối tượng copy, phương thức isInCheck trả về true.
-		if (copy.isInCheck(movingPiece.getColor())) {
-			// 6.5.2: Hệ thống xác định nước đi này vi phạm luật vì để mặc hoặc làm Vua rơi vào thế bị chiếu.
-			// 6.5.3: makeMove trả về false và không cập nhật dữ liệu trên bàn cờ thực (board).
 			return false;
 		}
+
+		if (movingPiece instanceof King && Math.abs(start.getColumn() - end.getColumn()) == 2) {
+			if (!canCastle(start, end)) {
+				return false;
+			}
+		} else {
+			// 6.1.18: ChessGame khởi tạo đối tượng copy (giả lập) và di chuyển thử để gọi copy.isInCheck().
+			ChessGame copy = new ChessGame(this);
+			copy.getBoard().movePiece(start, end);
+
+			// 6.1.19: Hệ thống gọi copy.isInCheck và xác nhận nước đi này không làm Vua bị chiếu.
+			if (copy.isInCheck(movingPiece.getColor())) {
+				return false;
+			}
+		}
+
 		//Dánh cho online
 		lastMoveSource = start;
 	    lastMoveTarget = end;
-	    /////
-	    //9.1.5. ChessGame tạo một chuỗi mô tả nước đi (bao gồm màu quân, loại quân và tọa độ từ đâu đến đâu) 
-	    /// rồi gọi historyMoves.add(moveNotation) để lưu lại trong danh sách lịch sử.
-		String name = movingPiece.getClass().getSimpleName();
-	    String moveNotation = String.format(
+
+	    // History moves notation
+	    String moveNotation;
+	    if (movingPiece instanceof King && Math.abs(start.getColumn() - end.getColumn()) == 2) {
+	        moveNotation = String.format("%s %s", 
+	            movingPiece.getColor().toString(), 
+	            (end.getColumn() - start.getColumn() > 0) ? "O-O" : "O-O-O"
+	        );
+	    } else {
+	        String name = movingPiece.getClass().getSimpleName();
+	        moveNotation = String.format(
 	    		 "%s [%s] (%d,%d) → (%d,%d)",
 	            movingPiece.getColor().toString(),
 	            name,
 	            start.getRow(), start.getColumn(),
 	            end.getRow(), end.getColumn()
 	        );
+	    }
 	    historyMoves.add(moveNotation);
+
 		// 6.1.20: Hệ thống gọi board.movePiece(start, end).
 		board.movePiece(start, end);
 		// 6.1.23: ChessGame thực hiện đổi lượt chơi: whiteTurn = !whiteTurn.
 		whiteTurn = !whiteTurn;
-		// 6.1.17: Phương thức isValidMove trả về true.
-		// 6.6.2: isValidMove trả về true.
 		return true;
-		
 	}
 
 	public void makeMoveForAI(Position start, Position end) {
@@ -144,11 +150,17 @@ public class ChessGame {
 			return;
 		}
 
-		ChessGame copy = new ChessGame(this);
-		copy.getBoard().movePiece(start, end);
+		if (movingPiece instanceof King && Math.abs(start.getColumn() - end.getColumn()) == 2) {
+			if (!canCastle(start, end)) {
+				return;
+			}
+		} else {
+			ChessGame copy = new ChessGame(this);
+			copy.getBoard().movePiece(start, end);
 
-		if (copy.isInCheck(movingPiece.getColor())) {
-			return;
+			if (copy.isInCheck(movingPiece.getColor())) {
+				return;
+			}
 		}
 
 		board.movePiece(start, end);
@@ -158,32 +170,87 @@ public class ChessGame {
 	// Method coi thử quân nào chiếu vua của hay không
 	public boolean isInCheck(PieceColor kingColor) {
 		Position kingPosition = findKingPosition(kingColor);
-		Piece originalKing = board.getPiece(kingPosition.getRow(), kingPosition.getColumn());
+		return isSquareAttacked(kingPosition, kingColor);
+	}
+
+	public boolean isSquareAttacked(Position pos, PieceColor defenderColor) {
+		Piece originalPiece = board.getPiece(pos.getRow(), pos.getColumn());
 		
-		// Temporarily replace King with a dummy Pawn of same color
-		// so that isValidMove threat detection evaluates correctly.
-		Pawn dummy = new Pawn(kingColor, kingPosition);
-		board.setPiece(kingPosition.getRow(), kingPosition.getColumn(), dummy);
+		// Temporarily place a dummy Pawn of the defender's color
+		// so that enemy pawns/pieces can detect a capture opportunity/valid move path.
+		Pawn dummy = new Pawn(defenderColor, pos);
+		board.setPiece(pos.getRow(), pos.getColumn(), dummy);
 		
-		boolean inCheck = false;
+		boolean attacked = false;
 		int n = board.getPieces().length;
 		for (int row = 0; row < n; row++) {
 			for (int col = 0; col < n; col++) {
 				Piece piece = board.getPiece(row, col);
-
-				if (piece != null && piece.getColor() != kingColor) {
-					if (piece.isValidMove(kingPosition, board.getPieces())) {
-						inCheck = true;
+				if (piece != null && piece.getColor() != defenderColor) {
+					if (piece.isValidMove(pos, board.getPieces())) {
+						attacked = true;
 						break;
 					}
 				}
 			}
+			if (attacked) break;
 		}
 		
-		// Restore original King
-		board.setPiece(kingPosition.getRow(), kingPosition.getColumn(), originalKing);
+		board.setPiece(pos.getRow(), pos.getColumn(), originalPiece);
+		return attacked;
+	}
+
+	public boolean canCastle(Position start, Position end) {
+		Piece king = board.getPiece(start.getRow(), start.getColumn());
+		if (!(king instanceof King)) {
+			return false;
+		}
 		
-		return inCheck;
+		// King must not have moved
+		if (king.hasMoved()) {
+			return false;
+		}
+		
+		// King must not currently be in check
+		if (isInCheck(king.getColor())) {
+			return false;
+		}
+		
+		int row = start.getRow();
+		int startCol = start.getColumn();
+		int endCol = end.getColumn();
+		int direction = (endCol - startCol) > 0 ? 1 : -1;
+		int rookCol = direction > 0 ? 7 : 0;
+		
+		Piece rook = board.getPiece(row, rookCol);
+		if (!(rook instanceof covua.chess.Rook) || rook.getColor() != king.getColor() || rook.hasMoved()) {
+			return false;
+		}
+		
+		// Verify intermediate squares are empty and not under attack
+		if (direction > 0) {
+			// King-side: columns 5 (f) and 6 (g) must be empty
+			if (board.getPiece(row, 5) != null || board.getPiece(row, 6) != null) {
+				return false;
+			}
+			// Squares passed through and landed on must not be attacked
+			if (isSquareAttacked(new Position(row, 5), king.getColor()) ||
+				isSquareAttacked(new Position(row, 6), king.getColor())) {
+				return false;
+			}
+		} else {
+			// Queen-side: columns 1 (b), 2 (c), and 3 (d) must be empty
+			if (board.getPiece(row, 1) != null || board.getPiece(row, 2) != null || board.getPiece(row, 3) != null) {
+				return false;
+			}
+			// Squares passed through and landed on must not be attacked (c and d)
+			if (isSquareAttacked(new Position(row, 3), king.getColor()) ||
+				isSquareAttacked(new Position(row, 2), king.getColor())) {
+				return false;
+			}
+		}
+		
+		return true;
 	}
 
 	// Lấy vị trì của vua
@@ -348,6 +415,17 @@ public class ChessGame {
 		case "King":
 			addSingleMoves(position, new int[][] { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 1, 1 }, { -1, -1 },
 					{ 1, -1 }, { -1, 1 } }, legalMoves);
+			
+			// Add castling moves if legal
+			int row = position.getRow();
+			Position kingSideTarget = new Position(row, 6);
+			if (canCastle(position, kingSideTarget)) {
+				legalMoves.add(kingSideTarget);
+			}
+			Position queenSideTarget = new Position(row, 2);
+			if (canCastle(position, queenSideTarget)) {
+				legalMoves.add(queenSideTarget);
+			}
 			break;
 		}
 		return legalMoves;
