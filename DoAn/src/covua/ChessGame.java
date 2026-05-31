@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import covua.chess.King;
 import covua.chess.Pawn;
 import covua.chess.Piece;
-
+//  1.1.9: Hệ thống tạo ChessGame với Board mới
 public class ChessGame {
 	private Board board;
 	private boolean whiteTurn = true;
@@ -18,7 +18,7 @@ public class ChessGame {
 	private Position lastMoveTarget;
 	private List<String> historyMoves = new ArrayList<>();
 
-	
+
 	public ChessGame() {
 		this.board = new Board();
 	}
@@ -41,7 +41,7 @@ public class ChessGame {
 	public void setWhiteTurn(boolean whiteTurn) {
 		this.whiteTurn = whiteTurn;
 	}
-	
+
 	//Danh cho online 2vs
 	public Position getLastMoveSource() {
 	    return lastMoveSource;
@@ -50,7 +50,7 @@ public class ChessGame {
 	public Position getLastMoveTarget() {
 	    return lastMoveTarget;
 	}
-	
+
 	public void applyMove(String moveStr) {
 	    // Lấy toàn bộ số nguyên từ chuỗi theo thứ tự
 	    List<Integer> nums = new ArrayList<>();
@@ -79,13 +79,13 @@ public class ChessGame {
 	    makeMove(from, to);
 	    selectedPosition = null;
 	}
-	
+
 	/////
-	
-	
-	
-	//9.1.4. Hệ thống kiểm tra tính hợp lệ của nước đi, 
-	//nếu nước đi hợp lệ thì hệ thống gọi hàm makeMove(Position, Position) 
+
+
+
+	//9.1.4. Hệ thống kiểm tra tính hợp lệ của nước đi,
+	//nếu nước đi hợp lệ thì hệ thống gọi hàm makeMove(Position, Position)
 	//nội bộ để thực thi và tiếp tục bước tiếp theo.
 	// method chọn quân đi í
 	public boolean makeMove(Position start, Position end) {
@@ -164,12 +164,12 @@ public class ChessGame {
 
 	public boolean isSquareAttacked(Position pos, PieceColor defenderColor) {
 		Piece originalPiece = board.getPiece(pos.getRow(), pos.getColumn());
-		
+
 		// Temporarily place a dummy Pawn of the defender's color
 		// so that enemy pawns/pieces can detect a capture opportunity/valid move path.
 		Pawn dummy = new Pawn(defenderColor, pos);
 		board.setPiece(pos.getRow(), pos.getColumn(), dummy);
-		
+
 		boolean attacked = false;
 		int n = board.getPieces().length;
 		for (int row = 0; row < n; row++) {
@@ -184,7 +184,7 @@ public class ChessGame {
 			}
 			if (attacked) break;
 		}
-		
+
 		board.setPiece(pos.getRow(), pos.getColumn(), originalPiece);
 		return attacked;
 	}
@@ -194,28 +194,28 @@ public class ChessGame {
 		if (!(king instanceof King)) {
 			return false;
 		}
-		
+
 		// King must not have moved
 		if (king.hasMoved()) {
 			return false;
 		}
-		
+
 		// King must not currently be in check
 		if (isInCheck(king.getColor())) {
 			return false;
 		}
-		
+
 		int row = start.getRow();
 		int startCol = start.getColumn();
 		int endCol = end.getColumn();
 		int direction = (endCol - startCol) > 0 ? 1 : -1;
 		int rookCol = direction > 0 ? 7 : 0;
-		
+
 		Piece rook = board.getPiece(row, rookCol);
 		if (!(rook instanceof covua.chess.Rook) || rook.getColor() != king.getColor() || rook.hasMoved()) {
 			return false;
 		}
-		
+
 		// Verify intermediate squares are empty and not under attack
 		if (direction > 0) {
 			// King-side: columns 5 (f) and 6 (g) must be empty
@@ -238,7 +238,7 @@ public class ChessGame {
 				return false;
 			}
 		}
-		
+
 		return true;
 	}
 
@@ -333,7 +333,7 @@ public class ChessGame {
 
 	public boolean handleSquareSelection(int row, int col) {
 		Position newPos = new Position(row, col);
-		
+
 		// 6.1.3: Hệ thống kiểm tra selectedPosition == null, xác nhận người dùng đang chọn quân Xe lần đầu.
 		if (selectedPosition == null) {
 			// 6.1.4: Hệ thống gọi board.getPiece(row, col) để lấy thông tin quân Xe tại vị trí vừa chọn.
@@ -342,33 +342,33 @@ public class ChessGame {
 			// 6.1.5: Hệ thống xác nhận quân Xe tồn tại và đúng màu của lượt hiện tại (whiteTurn).
 			// 6.2.1: Hệ thống phát hiện quân cờ tại ô chọn là null hoặc không đúng màu của lượt hiện tại (whiteTurn).
 			if (selectedPiece != null && selectedPiece.getColor() == (whiteTurn ? PieceColor.WHITE : PieceColor.BLACK)) {
-				
+
 				// 6.1.6: Hệ thống gán vị trí vừa chọn vào biến selectedPosition.
 				selectedPosition = newPos;
-				return false; 
+				return false;
 			}
-			
+
 			// 6.2.2: Phương thức handleSquareSelection trả về false.
 			// 6.2.3: (Giao diện) ChessGameGUI không thực hiện highlight, người dùng phải chọn lại quân cờ đúng.
 			return false;
-		} 
-		
+		}
+
 		// 6.1.9: Hệ thống gọi lại phương thức handleSquareSelection(row, col), lúc này selectedPosition != null.
 		else {
-			
+
 			// 6.8.1: Hệ thống xác nhận destinationPiece.getColor() == getCurrentPlayerColor()
 			Piece destinationPiece = board.getPiece(row, col);
 			if(destinationPiece != null && destinationPiece.getColor() == getCurrentPlayerColor()) {
 				// 6.8.2: Hệ thống hủy lệnh di chuyển cũ (makeMove trả về false).
-				// 6.8.3: (Logic xử lý chọn lại) Hệ thống gán selectedPosition = newPosition và cập nhật lại vùng 
+				// 6.8.3: (Logic xử lý chọn lại) Hệ thống gán selectedPosition = newPosition và cập nhật lại vùng
 				//highlight cho quân cờ mới vừa chọn tại ô đích.
 				selectedPosition = newPos;
 				return false;
 			}
-			
+
 			// 6.1.10: Hệ thống gọi phương thức makeMove(selectedPosition, newPosition) trong ChessGame.
 			boolean success = makeMove(selectedPosition, newPos);
-			
+
 			// 6.3.3: Phương thức makeMove nhận kết quả false và trả về false.
 			// 6.3.4: Hệ thống đặt lại selectedPosition = null, gọi clearHighlights() và chờ người dùng chọn lại từ đầu.
 			// 6.5.3: makeMove trả về false và không cập nhật dữ liệu trên bàn cờ thực (board).
@@ -406,7 +406,7 @@ public class ChessGame {
 		case "King":
 			addSingleMoves(position, new int[][] { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 1, 1 }, { -1, -1 },
 					{ 1, -1 }, { -1, 1 } }, legalMoves);
-			
+
 			// Add castling moves if legal
 			int row = position.getRow();
 			Position kingSideTarget = new Position(row, 6);
@@ -541,7 +541,7 @@ public class ChessGame {
 
 	@Override
 	public boolean equals(Object obj) {
-		// 8.4.13: Phương thức checkGameDraw() tiến hành đối chiếu tính trùng lặp của các trạng thái bàn cờ 
+		// 8.4.13: Phương thức checkGameDraw() tiến hành đối chiếu tính trùng lặp của các trạng thái bàn cờ
 		//(listState.get(1), get(3), get(5))
 		if (this == obj)
 			return true;

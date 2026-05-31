@@ -17,14 +17,17 @@ public class MainFrame extends JFrame{
 	private ChessGameGUI humanAI;
 	private ChessGameGUI online;
 //	private ChessClient client;
-	public MainFrame() {
+
+    // 1.1.0: Hệ thống khởi tạo MainFrame và tạo 2 instance ChessGameGUI
+    public MainFrame() {
 		setTitle("Game Cờ vua");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
      // Các màn hình
          humanHuman = new ChessGameGUI(this, false);
          humanAI = new ChessGameGUI(this, true);
 //         online = new ChessGameGUI(this, false;
-        
+
+        // 1.1.1: Hiển thị Home Screen
         cardPanel.add(new Home(this),"home");
         cardPanel.add(humanHuman, "human-human");
         cardPanel.add(humanAI, "human-ai");
@@ -36,13 +39,14 @@ public class MainFrame extends JFrame{
 
 	}
 		//9.1.0. User chọn chế độ chơi để bắt đầu trò chơi.
-
+// 1.1.3: MainFrame chuyển sang màn hình ChessGame
 	public void goTo(String screenName) {
 		backStack.push(currentScreen);
 	    currentScreen = screenName;
 	    cardLayout.show(cardPanel, screenName);
 
 	    // nếu màn hình là ChessGame thì set menu
+        //1.1.4: Gắn menu bar phù hợp
 	    if (screenName.equals("human-human")) {
 	        setJMenuBar(humanHuman.createMenuBar());
 	    } else if (screenName.equals("human-ai")) {
