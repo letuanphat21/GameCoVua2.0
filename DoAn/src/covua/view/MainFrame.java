@@ -8,9 +8,6 @@ import java.util.Stack;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-
-
-
 public class MainFrame extends JFrame{
 	private CardLayout cardLayout= new CardLayout();
 	private JPanel cardPanel = new JPanel(cardLayout);
