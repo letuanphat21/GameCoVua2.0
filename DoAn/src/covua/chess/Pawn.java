@@ -43,13 +43,9 @@ public class Pawn extends Piece {
 		}
 
 		// Check di chuyển chéo
-		if (Math.abs(colNext) == 1 && rowNext == 1 && board[newPosition.getRow()][newPosition.getColumn()] != null
-				&& board[newPosition.getRow()][newPosition.getColumn()].color != this.color) {
+		if (Math.abs(colNext) == 1 && rowNext == 1 && canCapture(board[newPosition.getRow()][newPosition.getColumn()])) {
 			return true;
 		}
-//		if(board[newPosition.getRow()][newPosition.getColumn()] instanceof King) {
-//			return false;
-//		}
 		return false;
 
 	}

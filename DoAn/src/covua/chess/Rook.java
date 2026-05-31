@@ -23,9 +23,10 @@ public class Rook extends Piece {
 	@Override
 
 	public boolean isValidMove(Position newPosition, Piece[][] board) {
-
+		// 6.1.12: Xe gọi super.isSameMove(newPosition) và xác nhận ô đích không trùng ô hiện tại.
+		// 6.7.1: Xe gọi isSameMove(newPosition) và nhận kết quả là true.
 		if (super.isSameMove(newPosition)) {
-
+			// 6.7.2: Phương thức isValidMove trả về false.
 			return false;
 
 		}
@@ -34,7 +35,10 @@ public class Rook extends Piece {
 
 	}
 
-
+	@Override
+	public Rook clone() {
+		return (Rook) super.clone();
+	}
 
 }
 

@@ -8,6 +8,7 @@ import covua.Position;
 public abstract class Piece implements Cloneable {
 	protected Position position;
 	protected PieceColor color;
+	protected boolean hasMoved = false;
 
 	public Piece(PieceColor color, Position position) {
 		this.color = color;
@@ -39,7 +40,19 @@ public abstract class Piece implements Cloneable {
 		this.color = color;
 	}
 
+	public boolean hasMoved() {
+		return hasMoved;
+	}
+
+	public void setHasMoved(boolean hasMoved) {
+		this.hasMoved = hasMoved;
+	}
+
 	public abstract boolean isValidMove(Position newPosition, Piece[][] board);
+
+	public boolean canCapture(Piece target) {
+		return target != null && target.getColor() != this.color && !(target instanceof King);
+	}
 
 	public boolean isSameMove(Position newPosition) {
 		return this.getPosition().equals(newPosition);
@@ -47,7 +60,7 @@ public abstract class Piece implements Cloneable {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(color, position);
+		return Objects.hash(color, position, hasMoved);
 	}
 
 	@Override
@@ -59,7 +72,7 @@ public abstract class Piece implements Cloneable {
 		if (getClass() != obj.getClass())
 			return false;
 		Piece other = (Piece) obj;
-		return color == other.color && Objects.equals(position, other.position);
+		return color == other.color && Objects.equals(position, other.position) && hasMoved == other.hasMoved;
 	}
 	
 	

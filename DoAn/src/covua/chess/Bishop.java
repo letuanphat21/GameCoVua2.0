@@ -34,12 +34,7 @@ public class Bishop extends Piece {
 			}
 		}
 		Piece destionationPiece = board[newPosition.getRow()][newPosition.getColumn()];
-		if(destionationPiece == null) {
-			return true;
-		}else if (destionationPiece.getColor()!= this.getColor()) {
-			return true;
-		}
-		return false;
+		return destionationPiece == null || canCapture(destionationPiece);
 		
 		
 		
