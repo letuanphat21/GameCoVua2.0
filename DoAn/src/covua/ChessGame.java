@@ -118,23 +118,12 @@ public class ChessGame {
 		lastMoveSource = start;
 	    lastMoveTarget = end;
 
-	    // History moves notation
-	    String moveNotation;
-	    if (movingPiece instanceof King && Math.abs(start.getColumn() - end.getColumn()) == 2) {
-	        moveNotation = String.format("%s %s", 
-	            movingPiece.getColor().toString(), 
-	            (end.getColumn() - start.getColumn() > 0) ? "O-O" : "O-O-O"
-	        );
-	    } else {
-	        String name = movingPiece.getClass().getSimpleName();
-	        moveNotation = String.format(
-	    		 "%s [%s] (%d,%d) → (%d,%d)",
-	            movingPiece.getColor().toString(),
-	            name,
-	            start.getRow(), start.getColumn(),
-	            end.getRow(), end.getColumn()
-	        );
-	    }
+	    String pieceName = movingPiece.getClass().getSimpleName();
+	    String moveNotation = String.format("%s [%s] %s->%s",
+	    		movingPiece.getColor().toString(),
+	    		pieceName,
+	    		start.toAlgebraic(),
+	    		end.toAlgebraic());
 	    historyMoves.add(moveNotation);
 
 		// 6.1.20: Hệ thống gọi board.movePiece(start, end).
