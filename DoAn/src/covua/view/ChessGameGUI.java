@@ -3,6 +3,7 @@ package covua.view;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -29,6 +30,7 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
+import javax.swing.SwingWorker;
 
 import covua.Board;
 import covua.ChessGame;
@@ -52,6 +54,7 @@ public class ChessGameGUI extends JPanel {
 	private List<ChessGame> listState = new ArrayList<ChessGame>();
 	private boolean isAi;
 	private boolean useAlphabeta = true;
+	private int aiDepth;
 	private MainFrame mainFrame;
 //	private ChessClient client;
 	private Position selectedPos = null;
@@ -183,7 +186,7 @@ public class ChessGameGUI extends JPanel {
 	private void refreshBoard() {
 		Board board = game.getBoard();
 		//9.1.7. Hệ thống vẽ lại tất cả các quân cờ ở đúng trạng thái mới trên vùng giao diện bàn cờ.
-
+		
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
 				Piece piece = board.getPiece(row, col);
@@ -286,57 +289,82 @@ public class ChessGameGUI extends JPanel {
 	}
 
 	private void makeAIMove() {
-		// 8.1.2: Hệ thống khởi tạo trạng thái giả lập ban đầu bằng cách tạo đối tượng sao chép: 
-		//Node root = new Node(new ChessGame(this.game))
-		// 8.1.3: Hệ thống trả về đối tượng sao chép root
-		Node root = new Node(new ChessGame(this.game));
-		Node best = null;
+	    this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+	    SwingWorker<Node, Void> worker = new SwingWorker<Node, Void>() {
 
-		// 8.1.4: Hệ thống kiểm tra biến cờ useAlphabeta để xác định chạy AI nào (mặc định là Alphabeta)
-		if (useAlphabeta) {
-			// 8.1.5: Hệ thống thực hiện hàm Alphabeta.bestMove(root, depth) để tiến hành tính toán nước đi tốt nhất
-			// 8.1.6: Hệ thống tiến hành duyệt cây quyết định và tính toán điểm số bàn cờ dựa trên hàm đánh giá trọng 
-			//số quân cờ (Evaluator.heurictis).
-			best = Alphabeta.bestMove(root, 3); // Chạy Alphabeta
-		} else {
-			// 8.2.4 Hệ thống kiểm tra useAlphabeta == false (lúc này chạy Minimax)
-			// 8.2.5: Hệ thống chuyển sang gọi phương thức Minimax.bestMove(root, depth) để tính toán nước đi
-			// 8.2.6: Hệ thống tiến hành duyệt cây quyết định và tính toán điểm số bàn cờ dựa trên hàm đánh giá trọng 
-			//số quân cờ (Evaluator.heurictis).
-			best = Minimax.bestMove(root, 3);   // Chạy Minimax
-		}
-		
-		// 8.1.8 / 8.2.8: Hệ thống trả về kết quả nước đi tốt nhất best (kiểu Node)
-		if (best != null) {
-			// 8.1.9: ChessGameGUI cập nhật trạng thái bàn cờ thực tế bằng cách sao chép dữ liệu từ AI: this.game.copyFrom(best.getState()).
-			this.game.copyFrom(best.getState());
-			// 8.1.10: Hệ thống lưu lại trạng thái mới vào danh sách kiểm tra hòa: listState.add(new ChessGame(this.game)).
-			listState.add(new ChessGame(this.game));
-			// 8.1.11: ChessGameGUI gọi phương thức refreshBoard() để xóa dữ liệu cũ, vẽ lại toàn bộ quân cờ
-			refreshBoard();
-			// 8.1.13: Hệ thống gọi phương thức checkGameState() 
-			//để kiểm tra xem nước đi của AI có chiếu Vua đối phương (Trắng) hay không. Nếu có, tô đỏ ô chứa Vua Trắng.
-			checkGameState();
-			// 8.1.14: Hệ thống kiểm tra điều kiện kích hoạt luật hòa: Kiểm tra nếu kích thước bộ nhớ 
-			//trạng thái chưa đủ điều kiện hòa (listState.size() != 6).
-			if (listState.size() == 6) {
-				// 8.4.12 Hệ thống phát hiện listState.size() == 6 và tự động gọi phương thức checkGameDraw().
-				checkGameDraw();
-				listState.clear();
-			}
-			// 8.1.15: Hệ thống gọi phương thức checkGameOverAfterMove() để xác định xem người chơi Trắng có bị chiếu hết hay không
-			checkGameOverAfterMove();
-		} else {
-			// 8.3.8: Hệ thống nhận kết quả trả về best == null
-			// 8.3.9: Hệ thống bỏ qua các bước cập nhật dữ liệu và vẽ lại bàn cờ (từ bước 8.1.9 đến 8.1.13)
-			// 8.3.10: Hệ thống chuyển thẳng đến bước 8.1.14 để kiểm tra trận đấu có kết thúc hay chưa
-			if (listState.size() == 6) {
-				checkGameDraw();
-				listState.clear();
-			}
-			checkGameOverAfterMove();
-		}
-		// 8.1.16: Kết thúc usecase. Lượt chơi quay lại cho người chơi (Trắng) nếu game còn tiếp diễn
+	        @Override
+	        protected Node doInBackground() throws Exception {
+	            // 8.1.2: Hệ thống khởi trạng thái giả lập ban đầu bằng cách tạo đối tượng sao chép: 
+	            //Node root = new Node(new ChessGame(this.game))
+	            // 8.1.3: Hệ thống trả về đối tượng sao chép root
+	            Node root = new Node(new ChessGame(ChessGameGUI.this.game));
+	            Node best = null;
+
+	            // 8.1.4: Hệ thống kiểm tra biến cờ useAlphabeta để xác định chạy AI nào (mặc định là Alphabeta)
+	            if (useAlphabeta) {
+	                // 8.1.5: Hệ thống thực hiện hàm Alphabeta.bestMove(root, depth) để tiến hành tính toán nước đi tốt nhất
+	                // 8.1.6: Hệ thống tiến hành duyệt cây quyết định và tính toán điểm số bàn cờ dựa trên hàm đánh giá trọng 
+	                //số quân cờ (Evaluator.heurictis).
+	                best = Alphabeta.bestMove(root, aiDepth); // Chạy Alphabeta
+	            } else {
+	                // 8.2.4 Hệ thống kiểm tra useAlphabeta == false (lúc này chạy Minimax)
+	                // 8.2.5: Hệ thống chuyển sang gọi phương thức Minimax.bestMove(root, depth) để tính toán nước đi
+	                // 8.2.6: Hệ thống tiến hành duyệt cây quyết định và tính toán điểm số bàn cờ dựa trên hàm đánh giá trọng 
+	                //số quân cờ (Evaluator.heurictis).
+	                best = Minimax.bestMove(root, aiDepth);   // Chạy Minimax
+	            }
+	            
+	            return best;
+	        }
+
+	        @Override
+	        protected void done() {
+	            try {
+	                Node best = get();
+
+	                // 8.1.8 / 8.2.8: Hệ thống trả về kết quả nước đi tốt nhất best (kiểu Node)
+	                if (best != null) {
+	                    // 8.1.9: ChessGameGUI cập nhật trạng thái bàn cờ thực tế bằng cách sao chép dữ liệu từ 
+	                	//AI: this.game.copyFrom(best.getState()).
+	                    ChessGameGUI.this.game.copyFrom(best.getState());
+	                    // 8.1.10: Hệ thống lưu lại trạng thái mới vào danh sách kiểm tra hòa: listState.add(new ChessGame(this.game)).
+	                    listState.add(new ChessGame(ChessGameGUI.this.game));
+	                    // 8.1.11: ChessGameGUI gọi phương thức refreshBoard() để xóa dữ liệu cũ, vẽ lại toàn bộ quân cờ
+	                    refreshBoard();
+	                    // 8.1.13: Hệ thống gọi phương thức checkGameState() 
+	                    //để kiểm tra xem nước đi của AI có chiếu Vua đối phương (Trắng) hay không. Nếu có, tô đỏ ô chứa Vua Trắng.
+	                    checkGameState();
+	                    // 8.1.14: Hệ thống kiểm tra điều kiện kích hoạt luật hòa: Kiểm tra nếu kích thước bộ nhớ 
+	                    //trạng thái chưa đủ điều kiện hòa (listState.size() != 6).
+	                    if (listState.size() == 6) {
+	                        // 8.4.12 Hệ thống phát hiện listState.size() == 6 và tự động gọi phương thức checkGameDraw().
+	                        checkGameDraw();
+	                        listState.clear();
+	                    }
+	                    // 8.1.15: Hệ thống gọi phương thức checkGameOverAfterMove() để xác định xem người chơi Trắng 
+	                    //có bị chiếu hết hay không
+	                    checkGameOverAfterMove();
+	                } else {
+	                    // 8.3.8: Hệ thống nhận kết quả trả về best == null
+	                    // 8.3.9: Hệ thống bỏ qua các bước cập nhật dữ liệu và vẽ lại bàn cờ (từ bước 8.1.9 đến 8.1.13)
+	                    // 8.3.10: Hệ thống chuyển thẳng đến bước 8.1.14 để kiểm tra trận đấu có kết thúc hay chưa
+	                    if (listState.size() == 6) {
+	                        checkGameDraw();
+	                        listState.clear();
+	                    }
+	                    checkGameOverAfterMove();
+	                }
+	                // 8.1.16: Kết thúc usecase. Lượt chơi quay lại cho người chơi (Trắng) nếu game còn tiếp diễn
+	                
+	            } catch (Exception e) {
+	                e.printStackTrace();
+	            } finally {
+	                ChessGameGUI.this.setCursor(java.awt.Cursor.getDefaultCursor());
+	            }
+	        }
+	    };
+
+	    worker.execute();
 	}
 
 	public void checkGameDraw() {
@@ -418,8 +446,12 @@ public class ChessGameGUI extends JPanel {
 	    JMenuBar menuBar = new JMenuBar();
 	    JMenu gameMenu = new JMenu("Game");
 	    JMenu aiMenu = new JMenu("Chọn AI");
+	    JMenu depthMenu = new JMenu("Độ sâu AI");
 	    JMenuItem resetItem = new JMenuItem("Reset");
 	    JMenuItem backHome = new JMenuItem("home");
+	    
+	    
+	    // Bổ sung thêm tùy chọn giữa hai thuật toán Minimax và Alpha-beta
 	    JRadioButtonMenuItem alphabetaItem = new JRadioButtonMenuItem("Thuật toán Alpha-Beta", true);
 	    JRadioButtonMenuItem minimaxItem = new JRadioButtonMenuItem("Thuật toán Minimax", false);
  		
@@ -440,6 +472,24 @@ public class ChessGameGUI extends JPanel {
  		aiMenu.add(alphabetaItem);
  		aiMenu.add(minimaxItem);
  		
+ 		// Thực hiện thêm các option chỉnh độ khó theo mong muốn của người dùng
+ 		ButtonGroup depthGroup = new ButtonGroup();
+ 		// Độ sâu được quy định theo mức độ:
+ 		// Dễ: 1 -> 2
+ 		// Bình thường: 3 -> 4
+ 		// Khó: 5 -> 6
+ 		for (int i = 1; i <= 6; i++) {
+ 	        int depthValue = i;
+ 	        JRadioButtonMenuItem depthItem = new JRadioButtonMenuItem("Độ sâu: " + depthValue, depthValue == 3);
+ 	        depthGroup.add(depthItem);
+ 	        
+ 	        depthItem.addActionListener(e -> {
+ 	            aiDepth = depthValue;
+ 	            JOptionPane.showMessageDialog(this, "Đã đổi độ sâu AI (Depth) thành: " + aiDepth);
+ 	        });
+ 	        depthMenu.add(depthItem);
+ 	    }
+ 		
 	    resetItem.addActionListener(e -> resetGame());
 	    backHome.addActionListener(new ActionListener() {
 			
@@ -454,6 +504,7 @@ public class ChessGameGUI extends JPanel {
 	    gameMenu.add(resetItem);
 	    gameMenu.addSeparator();
 		gameMenu.add(aiMenu);
+		gameMenu.add(depthMenu);
 	    menuBar.add(gameMenu);
 	    return menuBar;
 	}
