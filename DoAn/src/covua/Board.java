@@ -104,6 +104,11 @@ public class Board {
 			pieces[end.getRow()][end.getColumn()] = movingPiece;
 			// 6.1.22: Hệ thống gọi setPosition(end) của quân Xe để cập nhật tọa độ mới.
 			pieces[end.getRow()][end.getColumn()].setPosition(end);
+			
+			// 3.1.18: Set hasMoved = true cho Vua,
+			
+			// 3.2.16: King thì set  hasMoved = true
+			// 3.2.17: Rook thì set hasMoved = true
 			pieces[end.getRow()][end.getColumn()].setHasMoved(true);
 			// 6.1.21: Lớp Board cập nhật mảng pieces: Ô đích nhận giá trị quân Xe, vị trí cũ được gán null.
 			pieces[start.getRow()][start.getColumn()] = null;

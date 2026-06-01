@@ -12,16 +12,16 @@ import covua.chess.Rook;
 
 public class Evaluator {
 
-	// Piece-Square Table (PST) for Rook (from White's perspective)
+	
 	private static final int[][] ROOK_PST = {
-		{  0,  0,  0,  0,  0,  0,  0,  0 }, // Row 0 (Rank 8) - opponent back rank
-		{  5, 10, 10, 10, 10, 10, 10,  5 }, // Row 1 (Rank 7) - 7th rank bonus
-		{ -5,  0,  0,  0,  0,  0,  0, -5 }, // Row 2 (Rank 6)
-		{ -5,  0,  0,  0,  0,  0,  0, -5 }, // Row 3 (Rank 5)
-		{ -5,  0,  0,  0,  0,  0,  0, -5 }, // Row 4 (Rank 4)
-		{ -5,  0,  0,  0,  0,  0,  0, -5 }, // Row 5 (Rank 3)
-		{ -5,  0,  0,  0,  0,  0,  0, -5 }, // Row 6 (Rank 2)
-		{  0,  0,  0,  5,  5,  0,  0,  0 }  // Row 7 (Rank 1) - own back rank
+		{  0,  0,  0,  0,  0,  0,  0,  0 }, 
+		{  5, 10, 10, 10, 10, 10, 10,  5 },
+		{ -5,  0,  0,  0,  0,  0,  0, -5 }, 
+		{ -5,  0,  0,  0,  0,  0,  0, -5 }, 
+		{ -5,  0,  0,  0,  0,  0,  0, -5 }, 
+		{ -5,  0,  0,  0,  0,  0,  0, -5 }, 
+		{ -5,  0,  0,  0,  0,  0,  0, -5 },
+		{  0,  0,  0,  5,  5,  0,  0,  0 }  
 	};
 
 	public static int heurictis(Board board, PieceColor aiColor) {
