@@ -171,7 +171,12 @@ public class ChessGameGUI extends JPanel {
 	            final int finalCol = col;
 
 	            ChessSquareComponent square = new ChessSquareComponent(row, col);
-
+	            
+//	            3.1.0 Người chơi dùng chuột click vào ô chứa quân Vua.
+	            
+	            // 3.1.9: Người chơi click chọn ô đích cách Vua 1 ô xung quanh.
+	            
+	            // 3.2.9: Người chơi click chọn ô đích cách Vua đúng 2 ô ngang trên hàng xuất phát (cột 6 cho nhập thành gần, cột 2 cho nhập thành xa).
 	            square.addMouseListener(new MouseAdapter() {
 	                @Override
 	                public void mouseClicked(MouseEvent e) {
@@ -240,7 +245,13 @@ public class ChessGameGUI extends JPanel {
     private void handleSquareClick(int row, int col) {
 		// 6.1.1: Hệ thống gọi phương thức handleSquareClick(int row, int col) trong lớp ChessGameGUI.
 		// 6.1.2: ChessGameGUI chuyển tiếp yêu cầu đến phương thức handleSquareSelection(row, col) trong lớp ChessGame.
+    	
+    	//3.1.1: ChessGame Gọi handleSquareSelection(row, col). Do selectedPosition == null.
+    	//3.1.10: ChessGame gọi hàm handleSquareSelection(row, col). Do selectedPosition != null.
+    	
+    	//3.2.10: ChessGame gọi hàm handleSquareSelection(row, col). Do selectedPosition != null.
 		boolean moveResult = game.handleSquareSelection(row, col);
+		
 		// 6.3.4: Hệ thống đặt lại selectedPosition = null, gọi clearHighlights() và chờ người dùng chọn lại từ đầu.
 		// 6.5.4: Hệ thống đặt selectedPosition = null và gọi clearHighlights().
 		clearHighlights();
@@ -251,7 +262,14 @@ public class ChessGameGUI extends JPanel {
 	        //  KHÔNG ĐỤNG VÀO LOGIC CỦ
 
 	        // 6.1.25: (Giao diện) ChessGameGUI gọi refreshBoard() để vẽ lại bàn cờ
+			
+			// 3.1.20: ChessGameGUI gọi refreshBoard().
+			
+			// 3.2.18: Gọi refreshBoard() vẽ lại bàn cờ
 			refreshBoard();
+			//3.1.21: Kết thúc usecase.
+			//3.2.19: Kết thúc usecase
+			
 			// 6.1.26: Hệ thống gọi checkGameState(), nếu đối phương bị chiếu, hệ thống tô đỏ ô chứa Vua đối phương.
 			checkGameState();
 			if (listState.size() == 6) {
@@ -422,8 +440,10 @@ public class ChessGameGUI extends JPanel {
 	}
 
 	private void highlightLegalMoves(Position position) {
+		// 3.1.6: ChessGameGUI ->ChessGame gọi hàm getLegalMovesForPieceAt(position) tính toán các ô đi hợp lệ.
 		List<Position> legalMoves = game.getLegalMovesForPieceAt(position);
 		for (Position move : legalMoves) {
+			// 3.1.8: ChessGameGUI tô sáng màu xanh các ô gợi í nước đi này trên bàn cờ.
 			squares[move.getRow()][move.getColumn()].setBackground(Color.GREEN);
 		}
 	}
