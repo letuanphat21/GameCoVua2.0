@@ -85,6 +85,7 @@ public class ChessGameGUI extends JPanel {
 	public ChessGameGUI(MainFrame mainFrame,boolean isAi) {
 	    this.mainFrame = mainFrame;
 	    this.isAi = isAi;
+	    this.game.setAiMode(isAi);
 
 	    setLayout(new BorderLayout());
 
