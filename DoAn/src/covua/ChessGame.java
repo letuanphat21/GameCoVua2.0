@@ -17,6 +17,7 @@ public class ChessGame {
 	private Position lastMoveSource;
 	private Position lastMoveTarget;
 	private List<String> historyMoves = new ArrayList<>();
+	private boolean aiMode;
 
 
 	public ChessGame() {
@@ -31,11 +32,24 @@ public class ChessGame {
 		this.board = new Board(other.board);
 		this.whiteTurn = other.whiteTurn;
 		this.selectedPosition = null;
+		this.lastMoveSource = other.lastMoveSource;
+		this.lastMoveTarget = other.lastMoveTarget;
+		this.historyMoves = new ArrayList<>(other.historyMoves);
+		this.aiMode = other.aiMode;
 	}
 
 	public void copyFrom(ChessGame other) {
 		this.board = new Board(other.board);
 		this.whiteTurn = other.whiteTurn;
+		this.selectedPosition = null;
+		this.lastMoveSource = other.lastMoveSource;
+		this.lastMoveTarget = other.lastMoveTarget;
+		this.historyMoves = new ArrayList<>(other.historyMoves);
+		this.aiMode = other.aiMode;
+	}
+
+	public void setAiMode(boolean aiMode) {
+		this.aiMode = aiMode;
 	}
 
 	public void setWhiteTurn(boolean whiteTurn) {
@@ -133,13 +147,7 @@ public class ChessGame {
 		lastMoveSource = start;
 	    lastMoveTarget = end;
 
-	    String pieceName = movingPiece.getClass().getSimpleName();
-	    String moveNotation = String.format("%s [%s] %s->%s",
-	    		movingPiece.getColor().toString(),
-	    		pieceName,
-	    		start.toAlgebraic(),
-	    		end.toAlgebraic());
-	    historyMoves.add(moveNotation);
+	    historyMoves.add(formatMoveNotation(aiMode ? "Player" : null, movingPiece, start, end));
 
 		// 6.1.20: Hệ thống gọi board.movePiece(start, end).
 	    
@@ -173,8 +181,30 @@ public class ChessGame {
 			}
 		}
 
+		lastMoveSource = start;
+		lastMoveTarget = end;
+		historyMoves.add(formatMoveNotation("AI", movingPiece, start, end));
+
 		board.movePiece(start, end);
 		whiteTurn = !whiteTurn;
+	}
+
+	private String formatMoveNotation(String playerName, Piece movingPiece, Position start, Position end) {
+		String pieceName = movingPiece.getClass().getSimpleName();
+		String colorName = movingPiece.getColor() == PieceColor.WHITE ? "White" : "Black";
+		if (playerName == null || playerName.isEmpty()) {
+			return String.format("%s [%s] %s->%s",
+					colorName,
+					pieceName,
+					start.toAlgebraic(),
+					end.toAlgebraic());
+		}
+		return String.format("%s %s [%s] %s->%s",
+				playerName,
+				colorName,
+				pieceName,
+				start.toAlgebraic(),
+				end.toAlgebraic());
 	}
 
 	// Method coi thử quân nào chiếu vua của hay không
