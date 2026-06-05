@@ -54,7 +54,7 @@ public class ChessGameGUI extends JPanel {
 	private List<ChessGame> listState = new ArrayList<ChessGame>();
 	private boolean isAi;
 	private boolean useAlphabeta = true;
-	private int aiDepth;
+	private int aiDepth = 3;
 	private MainFrame mainFrame;
 //	private ChessClient client;
 	private Position selectedPos = null;
