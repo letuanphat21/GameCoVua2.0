@@ -30,6 +30,7 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.SwingWorker;
 
@@ -128,7 +129,7 @@ public class ChessGameGUI extends JPanel {
 	}
 //1.1.6: Cấu hình vùng lịch sử nước đi
 	private void configureHistoryView() {
-		historyView.setFixedCellHeight(30);
+		historyView.setFixedCellHeight(46);
 		historyView.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
 		historyView.setSelectionBackground(new Color(70, 130, 180));
 		historyView.setSelectionForeground(Color.WHITE);
@@ -153,10 +154,30 @@ public class ChessGameGUI extends JPanel {
 					label.setForeground(isWhiteMove ? WHITE_MOVE_FOREGROUND : BLACK_MOVE_FOREGROUND);
 				}
 
-				label.setText("  " + value);
+				label.setText(formatHistoryDisplayText(value));
 				return label;
 			}
 		});
+	}
+
+	private String formatHistoryDisplayText(Object value) {
+		String text = value == null ? "" : value.toString();
+		int detailIndex = text.indexOf(" (");
+		if (detailIndex < 0) {
+			return "  " + text;
+		}
+
+		String moveText = text.substring(0, detailIndex);
+		String detailText = text.substring(detailIndex + 1);
+		return "<html><div style='padding-left:8px;'>"
+				+ escapeHtml(moveText)
+				+ "<br><span style='font-size:10px;'>"
+				+ escapeHtml(detailText)
+				+ "</span></div></html>";
+	}
+
+	private String escapeHtml(String text) {
+		return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
 	}
 //	public ChessGameGUI(MainFrame mainFrame,boolean isAi,ChessClient client) {
 //		this.mainFrame=mainFrame;
@@ -320,6 +341,7 @@ public class ChessGameGUI extends JPanel {
 	//1.1.2: Xử lý click vào ô bàn cờ
     private void handleSquareClick(int row, int col) {
 		clearHistorySelection();
+		showWrongTurnMessageIfNeeded(row, col);
 		// 6.1.1: Hệ thống gọi phương thức handleSquareClick(int row, int col) trong lớp ChessGameGUI.
 		// 6.1.2: ChessGameGUI chuyển tiếp yêu cầu đến phương thức handleSquareSelection(row, col) trong lớp ChessGame.
     	
@@ -389,6 +411,42 @@ public class ChessGameGUI extends JPanel {
 		}
 		// 6.1.25: (Giao diện) ChessGameGUI gọi refreshBoard() để vẽ lại bàn cờ
 		refreshBoard();
+	}
+
+	private void showWrongTurnMessageIfNeeded(int row, int col) {
+		if (isAi || game.isPieceSelected()) {
+			return;
+		}
+
+		Piece clickedPiece = game.getBoard().getPiece(row, col);
+		if (clickedPiece == null || clickedPiece.getColor() == game.getCurrentPlayerColor()) {
+			return;
+		}
+
+		String currentTurn = game.getCurrentPlayerColor() == PieceColor.WHITE ? "White" : "Black";
+		showWrongTurnDialog(currentTurn);
+	}
+
+	private void showWrongTurnDialog(String currentTurn) {
+		JLabel title = new JLabel(currentTurn + " to move");
+		title.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+		title.setForeground(new Color(36, 42, 54));
+
+		JLabel message = new JLabel("Please wait for " + currentTurn + "'s turn before moving.");
+		message.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
+		message.setForeground(new Color(78, 86, 102));
+
+		JPanel content = new JPanel(new BorderLayout(0, 6));
+		content.setBorder(new EmptyBorder(6, 4, 2, 4));
+		content.add(title, BorderLayout.NORTH);
+		content.add(message, BorderLayout.CENTER);
+
+		JOptionPane.showMessageDialog(
+				this,
+				content,
+				"Wrong Turn",
+				JOptionPane.WARNING_MESSAGE,
+				UIManager.getIcon("OptionPane.warningIcon"));
 	}
 
 	private void makeAIMove() {

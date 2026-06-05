@@ -7,8 +7,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import covua.chess.King;
+import covua.chess.Bishop;
+import covua.chess.Knight;
 import covua.chess.Pawn;
 import covua.chess.Piece;
+import covua.chess.Queen;
+import covua.chess.Rook;
 //  1.1.9: Hệ thống tạo ChessGame với Board mới
 public class ChessGame {
 	private Board board;
@@ -147,7 +151,9 @@ public class ChessGame {
 		lastMoveSource = start;
 	    lastMoveTarget = end;
 
-	    historyMoves.add(formatMoveNotation(aiMode ? "Player" : null, movingPiece, start, end));
+	    Piece capturedPiece = board.getPiece(end.getRow(), end.getColumn());
+	    boolean castling = isCastlingMove(movingPiece, start, end);
+	    historyMoves.add(formatMoveNotation(aiMode ? "Player" : null, movingPiece, start, end, capturedPiece, castling));
 
 		// 6.1.20: Hệ thống gọi board.movePiece(start, end).
 	    
@@ -183,28 +189,73 @@ public class ChessGame {
 
 		lastMoveSource = start;
 		lastMoveTarget = end;
-		historyMoves.add(formatMoveNotation("AI", movingPiece, start, end));
+		Piece capturedPiece = board.getPiece(end.getRow(), end.getColumn());
+		boolean castling = isCastlingMove(movingPiece, start, end);
+		historyMoves.add(formatMoveNotation("AI", movingPiece, start, end, capturedPiece, castling));
 
 		board.movePiece(start, end);
 		whiteTurn = !whiteTurn;
 	}
 
-	private String formatMoveNotation(String playerName, Piece movingPiece, Position start, Position end) {
-		String pieceName = movingPiece.getClass().getSimpleName();
+	private boolean isCastlingMove(Piece movingPiece, Position start, Position end) {
+		return movingPiece instanceof King && Math.abs(start.getColumn() - end.getColumn()) == 2;
+	}
+
+	private String formatMoveNotation(String playerName, Piece movingPiece, Position start, Position end,
+			Piece capturedPiece, boolean castling) {
+		String pieceIcon = getPieceIcon(movingPiece);
 		String colorName = movingPiece.getColor() == PieceColor.WHITE ? "White" : "Black";
+		String details = formatMoveDetails(end, capturedPiece, castling);
 		if (playerName == null || playerName.isEmpty()) {
-			return String.format("%s [%s] %s->%s",
+			return String.format("%s %s %s->%s%s",
 					colorName,
-					pieceName,
+					pieceIcon,
 					start.toAlgebraic(),
-					end.toAlgebraic());
+					end.toAlgebraic(),
+					details);
 		}
-		return String.format("%s %s [%s] %s->%s",
+		return String.format("%s %s %s %s->%s%s",
 				playerName,
 				colorName,
-				pieceName,
+				pieceIcon,
 				start.toAlgebraic(),
-				end.toAlgebraic());
+				end.toAlgebraic(),
+				details);
+	}
+
+	private String formatMoveDetails(Position end, Piece capturedPiece, boolean castling) {
+		if (castling) {
+			String side = end.getColumn() == 6 ? "kingside" : "queenside";
+			return " (" + side + " castling)";
+		}
+
+		if (capturedPiece != null) {
+			return " (captures " + getPieceIcon(capturedPiece) + ")";
+		}
+
+		return "";
+	}
+
+	private String getPieceIcon(Piece piece) {
+		if (piece instanceof Pawn) {
+			return "\u265F";
+		}
+		if (piece instanceof Rook) {
+			return "\u265C";
+		}
+		if (piece instanceof Knight) {
+			return "\u265E";
+		}
+		if (piece instanceof Bishop) {
+			return "\u265D";
+		}
+		if (piece instanceof Queen) {
+			return "\u265B";
+		}
+		if (piece instanceof King) {
+			return "\u265A";
+		}
+		return piece.getClass().getSimpleName();
 	}
 
 	// Method coi thử quân nào chiếu vua của hay không
