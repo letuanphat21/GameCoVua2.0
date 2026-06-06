@@ -20,11 +20,13 @@ public class ChessGame {
 	private Position selectedPosition;
 	private Position lastMoveSource;
 	private Position lastMoveTarget;
+	// 9.2.2. Danh sách historyMoves giữ trạng thái rỗng khi chưa có nước đi hợp lệ.
 	private List<String> historyMoves = new ArrayList<>();
 	private boolean aiMode;
 
 
 	public ChessGame() {
+		// 9.2.1. Hệ thống khởi tạo ván cờ mới hoặc User chưa thực hiện bất kỳ nước đi hợp lệ nào.
 		this.board = new Board();
 	}
 
@@ -102,9 +104,7 @@ public class ChessGame {
 
 
 
-	//9.1.4. Hệ thống kiểm tra tính hợp lệ của nước đi,
-	//nếu nước đi hợp lệ thì hệ thống gọi hàm makeMove(Position, Position)
-	//nội bộ để thực thi và tiếp tục bước tiếp theo.
+	// 9.1.8. ChessGame gọi makeMove(selectedPosition, newPosition) để kiểm tra tính hợp lệ của nước đi.
 	// method chọn quân đi í
 	public boolean makeMove(Position start, Position end) {
 		Piece movingPiece = board.getPiece(start.getRow(), start.getColumn());
@@ -153,11 +153,16 @@ public class ChessGame {
 
 	    Piece capturedPiece = board.getPiece(end.getRow(), end.getColumn());
 	    boolean castling = isCastlingMove(movingPiece, start, end);
+	    // 9.1.9. Nếu nước đi hợp lệ, ChessGame tạo chuỗi mô tả nước đi gồm màu quân, ký hiệu quân cờ,
+	    // tọa độ bắt đầu, tọa độ kết thúc và thông tin phụ nếu có như bắt quân hoặc nhập thành.
+	    // 9.1.10. ChessGame gọi historyMoves.add(moveNotation) để lưu nước đi mới vào danh sách lịch sử.
 	    historyMoves.add(formatMoveNotation(aiMode ? "Player" : null, movingPiece, start, end, capturedPiece, castling));
 
 		// 6.1.20: Hệ thống gọi board.movePiece(start, end).
 	    
 	    // 3.1.17 : Board gọi movePiece(start, end) cập nhật vị trí Vua trên mảng pieces.
+		// 9.1.11. ChessGame gọi board.movePiece(start, end) để cập nhật trạng thái bàn cờ
+		// và đổi lượt chơi whiteTurn = !whiteTurn.
 		board.movePiece(start, end);
 		// 6.1.23: ChessGame thực hiện đổi lượt chơi: whiteTurn = !whiteTurn.
 		
@@ -191,6 +196,7 @@ public class ChessGame {
 		lastMoveTarget = end;
 		Piece capturedPiece = board.getPiece(end.getRow(), end.getColumn());
 		boolean castling = isCastlingMove(movingPiece, start, end);
+		// 9.4.3. Nước đi của AI đã được ghi vào historyMoves trong quá trình makeMoveForAI() với tiền tố "AI".
 		historyMoves.add(formatMoveNotation("AI", movingPiece, start, end, capturedPiece, castling));
 
 		board.movePiece(start, end);
@@ -420,6 +426,8 @@ public class ChessGame {
 
 	public void resetGame() {
 		// 8.5.17b / 8.8.17: Hệ thống gọi phương thức resetGame() để khởi tạo lại dữ liệu bàn cờ mặc định ban đầu.
+		// 9.3.4. ChessGame.resetGame() tạo lại Board mới, xóa toàn bộ historyMoves bằng historyMoves.clear()
+		// và đặt whiteTurn = true.
 		this.board = new Board();
 		historyMoves.clear();
 		this.whiteTurn = true;
@@ -451,6 +459,8 @@ public class ChessGame {
 
 				// 6.1.6: Hệ thống gán vị trí vừa chọn vào biến selectedPosition.
 				// 3.1.4: ChessGame gán vị trí hiện tại của Vua vào selectedPosition selectedPosition = newPos.
+				// 9.1.5. ChessGame phát hiện selectedPosition == null, kiểm tra ô được chọn có quân cờ đúng màu
+				// lượt hiện tại, sau đó lưu vị trí quân vào selectedPosition.
 				selectedPosition = newPos;
 				// 3.1.5: Trả về giá trị false.
 				return false;
@@ -475,6 +485,8 @@ public class ChessGame {
 			}
 
 			// 6.1.10: Hệ thống gọi phương thức makeMove(selectedPosition, newPosition) trong ChessGame.
+			// 9.1.6. User click tiếp vào ô đích muốn di chuyển.
+			// 9.1.8. ChessGame gọi makeMove(selectedPosition, newPosition) để kiểm tra tính hợp lệ của nước đi.
 			
 			// 3.1.11: ChessGame gọi method makeMove(selectedPosition, newPos).
 			// 3.2.11: ChessGame gọi method makeMove(selectedPosition, newPos).

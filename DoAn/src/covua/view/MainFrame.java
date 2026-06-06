@@ -38,7 +38,8 @@ public class MainFrame extends JFrame{
         setVisible(true);
 
 	}
-		//9.1.0. User chọn chế độ chơi để bắt đầu trò chơi.
+	// 9.1.0. User chọn chế độ chơi để bắt đầu trò chơi.
+	// 9.1.1. MainFrame chuyển sang màn hình ChessGame tương ứng và gắn menu bar cho màn hình chơi.
 // 1.1.3: MainFrame chuyển sang màn hình ChessGame
 	public void goTo(String screenName) {
 		backStack.push(currentScreen);

@@ -86,8 +86,7 @@ public class ChessGameGUI extends JPanel {
 	private static final Color TURN_BLACK_BACKGROUND = new Color(35, 39, 48);
 	private static final Color HISTORY_START_BACKGROUND = new Color(255, 210, 77);
 	private static final Color HISTORY_END_BACKGROUND = new Color(255, 174, 66);
-	//9.1.9. Giao diện vùng lịch sử nước đi (JList historyView)
-	//hiển thị lại toàn bộ chuỗi các nước đi đang có trong historyMoves của ChessGame.
+	// Giao diện vùng lịch sử nước đi (JList historyView) hiển thị các nước đi từ historyMoves.
 
     //1.1.5: ChessGameGUI khởi tạo layout BorderLayout
 	public ChessGameGUI(MainFrame mainFrame,boolean isAi) {
@@ -103,8 +102,7 @@ public class ChessGameGUI extends JPanel {
         //1.1.6: Cấu hình vùng lịch sử nước đi
 	    configureHistoryView();
 
-		//9.1.10. User trực quan thấy toàn bộ lịch sử nước đi cập nhật theo thứ tự
-		//(từng dòng, mỗi dòng biểu diễn 1 nước) ở vùng lịch sử bên phải giao diện.
+		// Vùng lịch sử bên phải hiển thị từng dòng, mỗi dòng biểu diễn một nước đi.
 	    JPanel historyPanel = new JPanel(new BorderLayout());
 	    JPanel historyHeader = new JPanel(new BorderLayout());
 	    JLabel historyTitle = new JLabel("Move History", SwingConstants.CENTER);
@@ -227,12 +225,11 @@ public class ChessGameGUI extends JPanel {
 	    refreshBoard();
 	}
 
-	//9.1.6. Kết quả thực thi nước đi trả về thành công,
-	//ChessGameGUI gọi hàm refreshBoard() để bắt đầu cập nhật giao diện.
+	// 9.1.12. Kết quả thực thi nước đi trả về thành công, ChessGameGUI gọi refreshBoard() để cập nhật giao diện.
     //1.1.8: Cập nhật giao diện bàn cờ
 	private void refreshBoard() {
 		Board board = game.getBoard();
-		//9.1.7. Hệ thống vẽ lại tất cả các quân cờ ở đúng trạng thái mới trên vùng giao diện bàn cờ.
+		// 9.1.13. Hệ thống vẽ lại tất cả quân cờ ở đúng trạng thái mới trên vùng giao diện bàn cờ.
 
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
@@ -247,11 +244,12 @@ public class ChessGameGUI extends JPanel {
 			}
 		}
 		updatingHistoryModel = true;
+		// 9.1.14. Hệ thống xóa dữ liệu cũ trong historyModel bằng historyModel.clear().
+		// 9.2.3. Khi không có lịch sử, clear vẫn chạy nhưng không có phần tử nào được thêm lại.
 		historyModel.clear();
-		//9.1.8. Hệ thống thông qua game.getHistoryMoves() để lấy lên toàn bộ lịch sử nước đi hiện tại,
-		//xóa dữ liệu cũ và cập nhật dữ liệu mới vào historyModel.
 
-		// 8.1.12: Hệ thống cập nhật lịch sử nước đi (historyView) ở vùng giao diện bên phải
+		// 9.1.15. Hệ thống gọi game.getHistoryMoves() để lấy toàn bộ lịch sử nước đi hiện tại.
+		// 9.1.16. Với từng phần tử trong historyMoves, hệ thống thêm vào historyModel theo dạng số thứ tự + nội dung nước đi.
 		int moveNumber = 1;
 		for (String move : game.getHistoryMoves()) {
 			historyModel.addElement(moveNumber + ". " + move);
@@ -262,10 +260,15 @@ public class ChessGameGUI extends JPanel {
 		}
 		updatingHistoryModel = false;
 		applyHistoryMoveHighlight();
+		// 9.1.17. JList historyView hiển thị lại toàn bộ chuỗi nước đi đang có trong historyModel.
+		// 9.1.18. User trực quan thấy lịch sử nước đi được cập nhật theo thứ tự ở vùng lịch sử bên phải giao diện.
+		// 9.2.4. Nếu historyMoves rỗng, historyView không hiển thị dòng lịch sử nước đi nào.
 		updateTurnLabel();
 	}
     // 1.1.11: Cập nhật turnLabel
 	private void highlightSelectedHistoryMove() {
+		// 9.5.1. User click vào một dòng trong historyView.
+		// 9.5.2. ChessGameGUI gọi highlightSelectedHistoryMove().
 		selectedHistoryIndex = historyView.getSelectedIndex();
 		if (selectedHistoryIndex < 0) {
 			selectedHistoryStart = null;
@@ -275,6 +278,7 @@ public class ChessGameGUI extends JPanel {
 			return;
 		}
 
+		// 9.5.3. Hệ thống đọc chuỗi nước đi trong historyModel và tách tọa độ bắt đầu, tọa độ kết thúc.
 		String moveText = historyModel.getElementAt(selectedHistoryIndex);
 		Position[] movePositions = extractMovePositions(moveText);
 		if (movePositions == null) {
@@ -283,10 +287,13 @@ public class ChessGameGUI extends JPanel {
 			return;
 		}
 
+		// 9.5.4. Nếu tách tọa độ thành công, hệ thống lưu selectedHistoryStart và selectedHistoryEnd.
 		selectedHistoryStart = movePositions[0];
 		selectedHistoryEnd = movePositions[1];
+		// 9.5.5. ChessGameGUI gọi clearHighlights(), sau đó tô màu ô bắt đầu và ô kết thúc của nước đi đã chọn.
 		clearHighlights();
 		applyHistoryMoveHighlight();
+		// 9.5.6. User trực quan thấy lại nước đi tương ứng trên bàn cờ.
 		checkGameState();
 	}
 
@@ -337,11 +344,15 @@ public class ChessGameGUI extends JPanel {
 		}
 	}
 
-	//9.1.3. ChessGameGUI gọi tiếp game.handleSquareSelection(row, col) để xác thực và thực thi nước đi.
+	// 9.1.2. User thực hiện nước đi mới bằng cách click vào ô chứa quân cờ của mình trên giao diện bàn cờ.
+	// 9.1.3. ChessGameGUI nhận sự kiện chuột, thực thi handleSquareClick(row, col) để xử lý thao tác chọn quân.
 	//1.1.2: Xử lý click vào ô bàn cờ
     private void handleSquareClick(int row, int col) {
 		clearHistorySelection();
 		showWrongTurnMessageIfNeeded(row, col);
+		// 9.1.4. ChessGameGUI gọi game.handleSquareSelection(row, col) để xác thực ô được chọn.
+		// 9.1.7. Khi User click ô đích, ChessGameGUI tiếp tục gọi handleSquareClick(row, col),
+		// sau đó gọi game.handleSquareSelection(row, col) để xử lý ô đích.
 		// 6.1.1: Hệ thống gọi phương thức handleSquareClick(int row, int col) trong lớp ChessGameGUI.
 		// 6.1.2: ChessGameGUI chuyển tiếp yêu cầu đến phương thức handleSquareSelection(row, col) trong lớp ChessGame.
     	
@@ -385,15 +396,13 @@ public class ChessGameGUI extends JPanel {
 			// hoặc checkGameDraw (hòa), hệ thống hiển thị thông báo kết thúc trận đấu qua JOptionPane.
 			// Nếu người dùng chọn "Yes", hệ thống gọi resetGame() để khởi tạo lại bàn cờ mới).
 			checkGameOverAfterMove();
-			//9.1.4. Hệ thống kiểm tra tính hợp lệ của nước đi,
-			//nếu nước đi hợp lệ thì hệ thống gọi hàm makeMove(Position, Position)
-			//nội bộ để thực thi và tiếp tục bước tiếp theo.
 			// 6.1.27: Hệ thống kiểm tra isAi, nếu là lượt của máy, hệ thống kích hoạt makeAIMove().
 
 			// 8.1.0: Usecase bắt đầu sau khi người chơi thực hiện xong nước đi hợp lệ của mình
 			//(Kết thúc Use Case di chuyển quân cờ của User, hệ thống kiểm tra thấy isAi == true và lượt đi tiếp theo
 			//là của quân Đen PieceColor.BLACK).
 			if(isAi ) {
+				// 9.4.1. Sau khi User đi hợp lệ trong chế độ chơi với AI, hệ thống có thể kích hoạt makeAIMove().
 				if (game.getCurrentPlayerColor() == PieceColor.BLACK) {
 					// 8.1.1: ChessGameGUI gọi phương thức makeAIMove().
 					makeAIMove();
@@ -487,11 +496,14 @@ public class ChessGameGUI extends JPanel {
 	                if (best != null) {
 	                    // 8.1.9: ChessGameGUI cập nhật trạng thái bàn cờ thực tế bằng cách sao chép dữ liệu từ
 	                	//AI: this.game.copyFrom(best.getState()).
+	                	// 9.4.2. Khi AI chọn được nước đi, trạng thái game được cập nhật từ best.getState().
 	                    ChessGameGUI.this.game.copyFrom(best.getState());
 	                    // 8.1.10: Hệ thống lưu lại trạng thái mới vào danh sách kiểm tra hòa: listState.add(new ChessGame(this.game)).
 	                    listState.add(new ChessGame(ChessGameGUI.this.game));
 	                    // 8.1.11: ChessGameGUI gọi phương thức refreshBoard() để xóa dữ liệu cũ, vẽ lại toàn bộ quân cờ
+	                    // 9.4.4. ChessGameGUI gọi refreshBoard().
 	                    refreshBoard();
+	                    // 9.4.5. historyView hiển thị cả nước đi của User và nước đi của AI theo đúng thứ tự phát sinh.
 	                    // 8.1.13: Hệ thống gọi phương thức checkGameState()
 	                    //để kiểm tra xem nước đi của AI có chiếu Vua đối phương (Trắng) hay không. Nếu có, tô đỏ ô chứa Vua Trắng.
 	                    checkGameState();
@@ -656,6 +668,7 @@ public class ChessGameGUI extends JPanel {
  	        depthMenu.add(depthItem);
  	    }
 
+	    // 9.3.1. User chọn nút "Reset" từ thanh menu trên giao diện.
 	    resetItem.addActionListener(e -> resetGame());
 	    backHome.addActionListener(new ActionListener() {
 
@@ -677,9 +690,16 @@ public class ChessGameGUI extends JPanel {
 
     //1.1.12: Reset game
 	private void resetGame() {
+		// 9.3.2. ChessGameGUI thực thi phương thức resetGame().
+		// 9.3.3. ChessGameGUI gọi game.resetGame() để đặt lại bàn cờ về trạng thái ban đầu.
 		game.resetGame();
+		// 9.3.5. ChessGameGUI gọi clearHistorySelection() để bỏ chọn dòng lịch sử đang được chọn nếu có.
 		clearHistorySelection();
+		// 9.3.6. ChessGameGUI gọi clearHighlights() để xóa các ô đang được tô sáng trên bàn cờ.
 		clearHighlights();
+		// 9.3.7. ChessGameGUI gọi refreshBoard() để vẽ lại các quân cờ ở vị trí xuất phát.
+		// 9.3.8. refreshBoard() gọi historyModel.clear(), sau đó đọc game.getHistoryMoves().
+		// 9.3.9. Vì historyMoves đã rỗng, historyModel không được thêm dòng nào và historyView trở lại trạng thái trắng rỗng.
 		refreshBoard();
 	}
 
