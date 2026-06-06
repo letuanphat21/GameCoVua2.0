@@ -7,8 +7,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import covua.chess.King;
+import covua.chess.Bishop;
+import covua.chess.Knight;
 import covua.chess.Pawn;
 import covua.chess.Piece;
+import covua.chess.Queen;
+import covua.chess.Rook;
 //  1.1.9: Hệ thống tạo ChessGame với Board mới
 public class ChessGame {
 	private Board board;
@@ -17,6 +21,7 @@ public class ChessGame {
 	private Position lastMoveSource;
 	private Position lastMoveTarget;
 	private List<String> historyMoves = new ArrayList<>();
+	private boolean aiMode;
 
 
 	public ChessGame() {
@@ -31,11 +36,24 @@ public class ChessGame {
 		this.board = new Board(other.board);
 		this.whiteTurn = other.whiteTurn;
 		this.selectedPosition = null;
+		this.lastMoveSource = other.lastMoveSource;
+		this.lastMoveTarget = other.lastMoveTarget;
+		this.historyMoves = new ArrayList<>(other.historyMoves);
+		this.aiMode = other.aiMode;
 	}
 
 	public void copyFrom(ChessGame other) {
 		this.board = new Board(other.board);
 		this.whiteTurn = other.whiteTurn;
+		this.selectedPosition = null;
+		this.lastMoveSource = other.lastMoveSource;
+		this.lastMoveTarget = other.lastMoveTarget;
+		this.historyMoves = new ArrayList<>(other.historyMoves);
+		this.aiMode = other.aiMode;
+	}
+
+	public void setAiMode(boolean aiMode) {
+		this.aiMode = aiMode;
 	}
 
 	public void setWhiteTurn(boolean whiteTurn) {
@@ -94,21 +112,36 @@ public class ChessGame {
 		if (movingPiece == null || movingPiece.getColor() != (whiteTurn ? PieceColor.WHITE : PieceColor.BLACK)) {
 			return false;
 		}
-
+		
+		// 3.1.12: King gọi method  isValidMove(end, board).
+		// 3.2.12: King gọi method  isValidMove(end, board).
+		
+		//3.1.13: Trả về true vì ô đích nằm trong phạm vi 1 ô xung quanh và không trùng ô xuất phát.
+		//3.2.13: Trả về true vì Vua đi ngang 2 ô và các ô nằm giữa Vua và Xe đều trống.
 		if (!movingPiece.isValidMove(end, board.getPieces())) {
 			return false;
 		}
+		
 
 		if (movingPiece instanceof King && Math.abs(start.getColumn() - end.getColumn()) == 2) {
+			//3.2.14: ChessGame gọi method canCastle(start, end)
 			if (!canCastle(start, end)) {
 				return false;
 			}
 		} else {
 			// 6.1.18: ChessGame khởi tạo đối tượng copy (giả lập) và di chuyển thử để gọi copy.isInCheck().
+			
+			// 3.1.14:  Khởi tạo bản sao giả lập ChessGame copy.
 			ChessGame copy = new ChessGame(this);
+			// 3.1.15: ChessGame Gọi copy.getBoard().movePiece(start, end).
+			
+			//3.2.15: Board gọi Gọi board.movePiece(start, end). Phát hiện Vua đi 2 ô ngang nên tự động di 
+			//chuyển quân Xe tương ứng về vị trí chuẩn bên cạnh Vua.
 			copy.getBoard().movePiece(start, end);
 
 			// 6.1.19: Hệ thống gọi copy.isInCheck và xác nhận nước đi này không làm Vua bị chiếu.
+			
+			// 3.1.16:  Xác nhận Vua không bị chiếu sau nước đi này (copy.isInCheck == false).
 			if (copy.isInCheck(movingPiece.getColor())) {
 				return false;
 			}
@@ -118,18 +151,20 @@ public class ChessGame {
 		lastMoveSource = start;
 	    lastMoveTarget = end;
 
-	    String pieceName = movingPiece.getClass().getSimpleName();
-	    String moveNotation = String.format("%s [%s] %s->%s",
-	    		movingPiece.getColor().toString(),
-	    		pieceName,
-	    		start.toAlgebraic(),
-	    		end.toAlgebraic());
-	    historyMoves.add(moveNotation);
+	    Piece capturedPiece = board.getPiece(end.getRow(), end.getColumn());
+	    boolean castling = isCastlingMove(movingPiece, start, end);
+	    historyMoves.add(formatMoveNotation(aiMode ? "Player" : null, movingPiece, start, end, capturedPiece, castling));
 
 		// 6.1.20: Hệ thống gọi board.movePiece(start, end).
+	    
+	    // 3.1.17 : Board gọi movePiece(start, end) cập nhật vị trí Vua trên mảng pieces.
 		board.movePiece(start, end);
 		// 6.1.23: ChessGame thực hiện đổi lượt chơi: whiteTurn = !whiteTurn.
+		
+		// 3.1.19: đổi lượt chơi (whiteTurn = !whiteTurn).
 		whiteTurn = !whiteTurn;
+		
+		
 		return true;
 	}
 
@@ -152,8 +187,75 @@ public class ChessGame {
 			}
 		}
 
+		lastMoveSource = start;
+		lastMoveTarget = end;
+		Piece capturedPiece = board.getPiece(end.getRow(), end.getColumn());
+		boolean castling = isCastlingMove(movingPiece, start, end);
+		historyMoves.add(formatMoveNotation("AI", movingPiece, start, end, capturedPiece, castling));
+
 		board.movePiece(start, end);
 		whiteTurn = !whiteTurn;
+	}
+
+	private boolean isCastlingMove(Piece movingPiece, Position start, Position end) {
+		return movingPiece instanceof King && Math.abs(start.getColumn() - end.getColumn()) == 2;
+	}
+
+	private String formatMoveNotation(String playerName, Piece movingPiece, Position start, Position end,
+			Piece capturedPiece, boolean castling) {
+		String pieceIcon = getPieceIcon(movingPiece);
+		String colorName = movingPiece.getColor() == PieceColor.WHITE ? "White" : "Black";
+		String details = formatMoveDetails(end, capturedPiece, castling);
+		if (playerName == null || playerName.isEmpty()) {
+			return String.format("%s %s %s->%s%s",
+					colorName,
+					pieceIcon,
+					start.toAlgebraic(),
+					end.toAlgebraic(),
+					details);
+		}
+		return String.format("%s %s %s %s->%s%s",
+				playerName,
+				colorName,
+				pieceIcon,
+				start.toAlgebraic(),
+				end.toAlgebraic(),
+				details);
+	}
+
+	private String formatMoveDetails(Position end, Piece capturedPiece, boolean castling) {
+		if (castling) {
+			String side = end.getColumn() == 6 ? "kingside" : "queenside";
+			return " (" + side + " castling)";
+		}
+
+		if (capturedPiece != null) {
+			return " (captures " + getPieceIcon(capturedPiece) + ")";
+		}
+
+		return "";
+	}
+
+	private String getPieceIcon(Piece piece) {
+		if (piece instanceof Pawn) {
+			return "\u265F";
+		}
+		if (piece instanceof Rook) {
+			return "\u265C";
+		}
+		if (piece instanceof Knight) {
+			return "\u265E";
+		}
+		if (piece instanceof Bishop) {
+			return "\u265D";
+		}
+		if (piece instanceof Queen) {
+			return "\u265B";
+		}
+		if (piece instanceof King) {
+			return "\u265A";
+		}
+		return piece.getClass().getSimpleName();
 	}
 
 	// Method coi thử quân nào chiếu vua của hay không
@@ -337,14 +439,20 @@ public class ChessGame {
 		// 6.1.3: Hệ thống kiểm tra selectedPosition == null, xác nhận người dùng đang chọn quân Xe lần đầu.
 		if (selectedPosition == null) {
 			// 6.1.4: Hệ thống gọi board.getPiece(row, col) để lấy thông tin quân Xe tại vị trí vừa chọn.
+			
+			// 3.1.2: Board gọi getPiece(row,col).
 			Piece selectedPiece = board.getPiece(row, col);
 
 			// 6.1.5: Hệ thống xác nhận quân Xe tồn tại và đúng màu của lượt hiện tại (whiteTurn).
 			// 6.2.1: Hệ thống phát hiện quân cờ tại ô chọn là null hoặc không đúng màu của lượt hiện tại (whiteTurn).
+			
+			// 3.1.3: ChessGame Xác nhận quân tại ô được click là quân Vua (King) và đúng màu của lượt đi (whiteTurn).
 			if (selectedPiece != null && selectedPiece.getColor() == (whiteTurn ? PieceColor.WHITE : PieceColor.BLACK)) {
 
 				// 6.1.6: Hệ thống gán vị trí vừa chọn vào biến selectedPosition.
+				// 3.1.4: ChessGame gán vị trí hiện tại của Vua vào selectedPosition selectedPosition = newPos.
 				selectedPosition = newPos;
+				// 3.1.5: Trả về giá trị false.
 				return false;
 			}
 
@@ -367,6 +475,9 @@ public class ChessGame {
 			}
 
 			// 6.1.10: Hệ thống gọi phương thức makeMove(selectedPosition, newPosition) trong ChessGame.
+			
+			// 3.1.11: ChessGame gọi method makeMove(selectedPosition, newPos).
+			// 3.2.11: ChessGame gọi method makeMove(selectedPosition, newPos).
 			boolean success = makeMove(selectedPosition, newPos);
 
 			// 6.3.3: Phương thức makeMove nhận kết quả false và trả về false.
@@ -419,6 +530,7 @@ public class ChessGame {
 			}
 			break;
 		}
+//		3.1.7: Trả về danh sách các nước đi hợp lệ.
 		return legalMoves;
 	}
 

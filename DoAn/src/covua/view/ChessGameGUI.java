@@ -28,7 +28,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.SwingWorker;
 
@@ -54,7 +56,7 @@ public class ChessGameGUI extends JPanel {
 	private List<ChessGame> listState = new ArrayList<ChessGame>();
 	private boolean isAi;
 	private boolean useAlphabeta = true;
-	private int aiDepth;
+	private int aiDepth = 3;
 	private MainFrame mainFrame;
 //	private ChessClient client;
 	private Position selectedPos = null;
@@ -72,12 +74,18 @@ public class ChessGameGUI extends JPanel {
 	private DefaultListModel<String> historyModel = new DefaultListModel<>();
 	private JList<String> historyView = new JList<>(historyModel);
 	private JLabel turnLabel = new JLabel("", SwingConstants.CENTER);
+	private Position selectedHistoryStart;
+	private Position selectedHistoryEnd;
+	private int selectedHistoryIndex = -1;
+	private boolean updatingHistoryModel;
 	private static final Color WHITE_MOVE_BACKGROUND = new Color(245, 248, 255);
 	private static final Color BLACK_MOVE_BACKGROUND = new Color(48, 52, 63);
 	private static final Color WHITE_MOVE_FOREGROUND = new Color(30, 44, 70);
 	private static final Color BLACK_MOVE_FOREGROUND = new Color(245, 247, 250);
 	private static final Color TURN_WHITE_BACKGROUND = new Color(255, 255, 255);
 	private static final Color TURN_BLACK_BACKGROUND = new Color(35, 39, 48);
+	private static final Color HISTORY_START_BACKGROUND = new Color(255, 210, 77);
+	private static final Color HISTORY_END_BACKGROUND = new Color(255, 174, 66);
 	//9.1.9. Giao diện vùng lịch sử nước đi (JList historyView)
 	//hiển thị lại toàn bộ chuỗi các nước đi đang có trong historyMoves của ChessGame.
 
@@ -85,6 +93,7 @@ public class ChessGameGUI extends JPanel {
 	public ChessGameGUI(MainFrame mainFrame,boolean isAi) {
 	    this.mainFrame = mainFrame;
 	    this.isAi = isAi;
+	    this.game.setAiMode(isAi);
 
 	    setLayout(new BorderLayout());
 
@@ -120,10 +129,16 @@ public class ChessGameGUI extends JPanel {
 	}
 //1.1.6: Cấu hình vùng lịch sử nước đi
 	private void configureHistoryView() {
-		historyView.setFixedCellHeight(30);
+		historyView.setFixedCellHeight(46);
 		historyView.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
 		historyView.setSelectionBackground(new Color(70, 130, 180));
 		historyView.setSelectionForeground(Color.WHITE);
+		historyView.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		historyView.addListSelectionListener(e -> {
+			if (!e.getValueIsAdjusting() && !updatingHistoryModel) {
+				highlightSelectedHistoryMove();
+			}
+		});
 		historyView.setCellRenderer(new DefaultListCellRenderer() {
 			@Override
 			public Component getListCellRendererComponent(JList<?> list, Object value, int index,
@@ -139,10 +154,30 @@ public class ChessGameGUI extends JPanel {
 					label.setForeground(isWhiteMove ? WHITE_MOVE_FOREGROUND : BLACK_MOVE_FOREGROUND);
 				}
 
-				label.setText("  " + value);
+				label.setText(formatHistoryDisplayText(value));
 				return label;
 			}
 		});
+	}
+
+	private String formatHistoryDisplayText(Object value) {
+		String text = value == null ? "" : value.toString();
+		int detailIndex = text.indexOf(" (");
+		if (detailIndex < 0) {
+			return "  " + text;
+		}
+
+		String moveText = text.substring(0, detailIndex);
+		String detailText = text.substring(detailIndex + 1);
+		return "<html><div style='padding-left:8px;'>"
+				+ escapeHtml(moveText)
+				+ "<br><span style='font-size:10px;'>"
+				+ escapeHtml(detailText)
+				+ "</span></div></html>";
+	}
+
+	private String escapeHtml(String text) {
+		return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
 	}
 //	public ChessGameGUI(MainFrame mainFrame,boolean isAi,ChessClient client) {
 //		this.mainFrame=mainFrame;
@@ -171,7 +206,12 @@ public class ChessGameGUI extends JPanel {
 	            final int finalCol = col;
 
 	            ChessSquareComponent square = new ChessSquareComponent(row, col);
-
+	            
+//	            3.1.0 Người chơi dùng chuột click vào ô chứa quân Vua.
+	            
+	            // 3.1.9: Người chơi click chọn ô đích cách Vua 1 ô xung quanh.
+	            
+	            // 3.2.9: Người chơi click chọn ô đích cách Vua đúng 2 ô ngang trên hàng xuất phát (cột 6 cho nhập thành gần, cột 2 cho nhập thành xa).
 	            square.addMouseListener(new MouseAdapter() {
 	                @Override
 	                public void mouseClicked(MouseEvent e) {
@@ -206,6 +246,7 @@ public class ChessGameGUI extends JPanel {
 				}
 			}
 		}
+		updatingHistoryModel = true;
 		historyModel.clear();
 		//9.1.8. Hệ thống thông qua game.getHistoryMoves() để lấy lên toàn bộ lịch sử nước đi hiện tại,
 		//xóa dữ liệu cũ và cập nhật dữ liệu mới vào historyModel.
@@ -216,9 +257,70 @@ public class ChessGameGUI extends JPanel {
 			historyModel.addElement(moveNumber + ". " + move);
 			moveNumber++;
 		}
+		if (selectedHistoryIndex >= 0 && selectedHistoryIndex < historyModel.size()) {
+			historyView.setSelectedIndex(selectedHistoryIndex);
+		}
+		updatingHistoryModel = false;
+		applyHistoryMoveHighlight();
 		updateTurnLabel();
 	}
     // 1.1.11: Cập nhật turnLabel
+	private void highlightSelectedHistoryMove() {
+		selectedHistoryIndex = historyView.getSelectedIndex();
+		if (selectedHistoryIndex < 0) {
+			selectedHistoryStart = null;
+			selectedHistoryEnd = null;
+			clearHighlights();
+			checkGameState();
+			return;
+		}
+
+		String moveText = historyModel.getElementAt(selectedHistoryIndex);
+		Position[] movePositions = extractMovePositions(moveText);
+		if (movePositions == null) {
+			selectedHistoryStart = null;
+			selectedHistoryEnd = null;
+			return;
+		}
+
+		selectedHistoryStart = movePositions[0];
+		selectedHistoryEnd = movePositions[1];
+		clearHighlights();
+		applyHistoryMoveHighlight();
+		checkGameState();
+	}
+
+	private Position[] extractMovePositions(String moveText) {
+		int arrowIndex = moveText.indexOf("->");
+		if (arrowIndex < 2 || arrowIndex + 4 > moveText.length()) {
+			return null;
+		}
+
+		String startText = moveText.substring(arrowIndex - 2, arrowIndex);
+		String endText = moveText.substring(arrowIndex + 2, arrowIndex + 4);
+		if (!startText.matches("[a-h][1-8]") || !endText.matches("[a-h][1-8]")) {
+			return null;
+		}
+
+		return new Position[] { Position.fromAlgebraic(startText), Position.fromAlgebraic(endText) };
+	}
+
+	private void applyHistoryMoveHighlight() {
+		if (selectedHistoryStart == null || selectedHistoryEnd == null) {
+			return;
+		}
+
+		squares[selectedHistoryStart.getRow()][selectedHistoryStart.getColumn()].setBackground(HISTORY_START_BACKGROUND);
+		squares[selectedHistoryEnd.getRow()][selectedHistoryEnd.getColumn()].setBackground(HISTORY_END_BACKGROUND);
+	}
+
+	private void clearHistorySelection() {
+		selectedHistoryStart = null;
+		selectedHistoryEnd = null;
+		selectedHistoryIndex = -1;
+		historyView.clearSelection();
+	}
+
 	private void updateTurnLabel() {
 		if (isAi) {
 			return;
@@ -238,9 +340,17 @@ public class ChessGameGUI extends JPanel {
 	//9.1.3. ChessGameGUI gọi tiếp game.handleSquareSelection(row, col) để xác thực và thực thi nước đi.
 	//1.1.2: Xử lý click vào ô bàn cờ
     private void handleSquareClick(int row, int col) {
+		clearHistorySelection();
+		showWrongTurnMessageIfNeeded(row, col);
 		// 6.1.1: Hệ thống gọi phương thức handleSquareClick(int row, int col) trong lớp ChessGameGUI.
 		// 6.1.2: ChessGameGUI chuyển tiếp yêu cầu đến phương thức handleSquareSelection(row, col) trong lớp ChessGame.
+    	
+    	//3.1.1: ChessGame Gọi handleSquareSelection(row, col). Do selectedPosition == null.
+    	//3.1.10: ChessGame gọi hàm handleSquareSelection(row, col). Do selectedPosition != null.
+    	
+    	//3.2.10: ChessGame gọi hàm handleSquareSelection(row, col). Do selectedPosition != null.
 		boolean moveResult = game.handleSquareSelection(row, col);
+		
 		// 6.3.4: Hệ thống đặt lại selectedPosition = null, gọi clearHighlights() và chờ người dùng chọn lại từ đầu.
 		// 6.5.4: Hệ thống đặt selectedPosition = null và gọi clearHighlights().
 		clearHighlights();
@@ -251,7 +361,14 @@ public class ChessGameGUI extends JPanel {
 	        //  KHÔNG ĐỤNG VÀO LOGIC CỦ
 
 	        // 6.1.25: (Giao diện) ChessGameGUI gọi refreshBoard() để vẽ lại bàn cờ
+			
+			// 3.1.20: ChessGameGUI gọi refreshBoard().
+			
+			// 3.2.18: Gọi refreshBoard() vẽ lại bàn cờ
 			refreshBoard();
+			//3.1.21: Kết thúc usecase.
+			//3.2.19: Kết thúc usecase
+			
 			// 6.1.26: Hệ thống gọi checkGameState(), nếu đối phương bị chiếu, hệ thống tô đỏ ô chứa Vua đối phương.
 			checkGameState();
 			if (listState.size() == 6) {
@@ -294,6 +411,42 @@ public class ChessGameGUI extends JPanel {
 		}
 		// 6.1.25: (Giao diện) ChessGameGUI gọi refreshBoard() để vẽ lại bàn cờ
 		refreshBoard();
+	}
+
+	private void showWrongTurnMessageIfNeeded(int row, int col) {
+		if (isAi || game.isPieceSelected()) {
+			return;
+		}
+
+		Piece clickedPiece = game.getBoard().getPiece(row, col);
+		if (clickedPiece == null || clickedPiece.getColor() == game.getCurrentPlayerColor()) {
+			return;
+		}
+
+		String currentTurn = game.getCurrentPlayerColor() == PieceColor.WHITE ? "White" : "Black";
+		showWrongTurnDialog(currentTurn);
+	}
+
+	private void showWrongTurnDialog(String currentTurn) {
+		JLabel title = new JLabel(currentTurn + " to move");
+		title.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+		title.setForeground(new Color(36, 42, 54));
+
+		JLabel message = new JLabel("Please wait for " + currentTurn + "'s turn before moving.");
+		message.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
+		message.setForeground(new Color(78, 86, 102));
+
+		JPanel content = new JPanel(new BorderLayout(0, 6));
+		content.setBorder(new EmptyBorder(6, 4, 2, 4));
+		content.add(title, BorderLayout.NORTH);
+		content.add(message, BorderLayout.CENTER);
+
+		JOptionPane.showMessageDialog(
+				this,
+				content,
+				"Wrong Turn",
+				JOptionPane.WARNING_MESSAGE,
+				UIManager.getIcon("OptionPane.warningIcon"));
 	}
 
 	private void makeAIMove() {
@@ -422,8 +575,10 @@ public class ChessGameGUI extends JPanel {
 	}
 
 	private void highlightLegalMoves(Position position) {
+		// 3.1.6: ChessGameGUI ->ChessGame gọi hàm getLegalMovesForPieceAt(position) tính toán các ô đi hợp lệ.
 		List<Position> legalMoves = game.getLegalMovesForPieceAt(position);
 		for (Position move : legalMoves) {
+			// 3.1.8: ChessGameGUI tô sáng màu xanh các ô gợi í nước đi này trên bàn cờ.
 			squares[move.getRow()][move.getColumn()].setBackground(Color.GREEN);
 		}
 	}
@@ -434,6 +589,7 @@ public class ChessGameGUI extends JPanel {
 				squares[row][col].setBackground((row + col) % 2 == 0 ? Color.LIGHT_GRAY : new Color(205, 133, 63));
 			}
 		}
+		applyHistoryMoveHighlight();
 	}
 
 //	private void addGameResetOption() {
@@ -461,7 +617,7 @@ public class ChessGameGUI extends JPanel {
 	    JMenuItem backHome = new JMenuItem("home");
 
 
-	    // Bổ sung thêm tùy chọn giữa hai thuật toán Minimax và Alpha-beta
+	    // (Pre-Conditinos) Bổ sung thêm tùy chọn giữa hai thuật toán Minimax và Alpha-beta
 	    JRadioButtonMenuItem alphabetaItem = new JRadioButtonMenuItem("Thuật toán Alpha-Beta", true);
 	    JRadioButtonMenuItem minimaxItem = new JRadioButtonMenuItem("Thuật toán Minimax", false);
 
@@ -482,7 +638,7 @@ public class ChessGameGUI extends JPanel {
  		aiMenu.add(alphabetaItem);
  		aiMenu.add(minimaxItem);
 
- 		// Thực hiện thêm các option chỉnh độ khó theo mong muốn của người dùng
+ 		// (Pre-Conditions) Thực hiện thêm các option chỉnh độ khó theo mong muốn của người dùng
  		ButtonGroup depthGroup = new ButtonGroup();
  		// Độ sâu được quy định theo mức độ:
  		// Dễ: 1 -> 2
@@ -522,6 +678,7 @@ public class ChessGameGUI extends JPanel {
     //1.1.12: Reset game
 	private void resetGame() {
 		game.resetGame();
+		clearHistorySelection();
 		clearHighlights();
 		refreshBoard();
 	}
