@@ -617,7 +617,7 @@ public class ChessGameGUI extends JPanel {
 	    JMenuItem backHome = new JMenuItem("home");
 
 
-	    // Bổ sung thêm tùy chọn giữa hai thuật toán Minimax và Alpha-beta
+	    // (Pre-Conditinos) Bổ sung thêm tùy chọn giữa hai thuật toán Minimax và Alpha-beta
 	    JRadioButtonMenuItem alphabetaItem = new JRadioButtonMenuItem("Thuật toán Alpha-Beta", true);
 	    JRadioButtonMenuItem minimaxItem = new JRadioButtonMenuItem("Thuật toán Minimax", false);
 
@@ -638,7 +638,7 @@ public class ChessGameGUI extends JPanel {
  		aiMenu.add(alphabetaItem);
  		aiMenu.add(minimaxItem);
 
- 		// Thực hiện thêm các option chỉnh độ khó theo mong muốn của người dùng
+ 		// (Pre-Conditions) Thực hiện thêm các option chỉnh độ khó theo mong muốn của người dùng
  		ButtonGroup depthGroup = new ButtonGroup();
  		// Độ sâu được quy định theo mức độ:
  		// Dễ: 1 -> 2
